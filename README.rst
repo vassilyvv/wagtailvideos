@@ -12,11 +12,12 @@ A wagtail module for uploading and displaying videos in various codecs.
 Installing
 ==========
 
+**This package is not on PyPI yet**
 Install using pip::
 
     pip install wagtailvideos
 
-It works with Wagtail 1.0 and upwards.
+It works with Wagtail 1.4 and upwards.
 
 Using
 =====
