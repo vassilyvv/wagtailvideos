@@ -16,4 +16,4 @@ It works with Wagtail 1.0 and upwards.
 Using
 =====
 
-TODO
+DO NOT USE THIS, IT IS BROKE AND BEING DEVELOPED.
