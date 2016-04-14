@@ -53,7 +53,7 @@ def index(request):
         })
     else:
         return render(request, 'wagtailvideos/videos/index.html', {
-            'images': videos,
+            'videos': videos,
             'query_string': query_string,
             'is_searching': bool(query_string),
 
@@ -63,40 +63,39 @@ def index(request):
         })
 
 
-def edit(request, image_id):
-    Image = get_video_model()
-    ImageForm = get_video_form(Image)
+def edit(request, video_id):
+    Video = get_video_model()
+    VideoForm = get_video_form(Video)
 
-    image = get_object_or_404(Image, id=image_id)
+    video = get_object_or_404(Video, id=video_id)
 
     if request.POST:
-        original_file = image.file
-        form = ImageForm(request.POST, request.FILES, instance=image, user=request.user)
+        original_file = video.file
+        form = VideoForm(request.POST, request.FILES, instance=video)
         if form.is_valid():
             if 'file' in form.changed_data:
                 # if providing a new image file, delete the old one and all renditions.
                 # NB Doing this via original_file.delete() clears the file field,
                 # which definitely isn't what we want...
                 original_file.storage.delete(original_file.name)
-                image.renditions.all().delete()
 
                 # Set new image file size
-                image.file_size = image.file.size
+                video.file_size = video.file.size
 
             form.save()
 
             # Reindex the image to make sure all tags are indexed
             for backend in get_search_backends():
-                backend.add(image)
+                backend.add(video)
 
-            messages.success(request, _("Image '{0}' updated.").format(image.title), buttons=[
-                messages.button(reverse('wagtailvideos:edit', args=(image.id,)), _('Edit again'))
+            messages.success(request, _("Video '{0}' updated.").format(video.title), buttons=[
+                messages.button(reverse('wagtailvideos:edit', args=(video.id,)), _('Edit again'))
             ])
             return redirect('wagtailvideos:index')
         else:
-            messages.error(request, _("The image could not be saved due to errors."))
+            messages.error(request, _("The video could not be saved due to errors."))
     else:
-        form = ImageForm(instance=image, user=request.user)
+        form = VideoForm(instance=video)
 
     # Check if we should enable the frontend url generator
     try:
@@ -105,20 +104,20 @@ def edit(request, image_id):
     except NoReverseMatch:
         url_generator_enabled = False
 
-    if image.is_stored_locally():
+    if video.is_stored_locally():
         # Give error if image file doesn't exist
-        if not os.path.isfile(image.file.path):
+        if not os.path.isfile(video.file.path):
             messages.error(request, _(
-                "The source image file could not be found. Please change the source or delete the image."
-            ).format(image.title), buttons=[
-                messages.button(reverse('wagtailvideos:delete', args=(image.id,)), _('Delete'))
+                "The source video file could not be found. Please change the source or delete the video."
+            ).format(video.title), buttons=[
+                messages.button(reverse('wagtailvideos:delete', args=(video.id,)), _('Delete'))
             ])
 
-    return render(request, "wagtailvideos/images/edit.html", {
-        'image': image,
+    return render(request, "wagtailvideos/videos/edit.html", {
+        'video': video,
         'form': form,
         'url_generator_enabled': url_generator_enabled,
-        'filesize': image.get_file_size(),
+        'filesize': video.get_file_size(),
     })
 
 
