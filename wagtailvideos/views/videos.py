@@ -46,13 +46,14 @@ def index(request):
 
     # Create response
     if request.is_ajax():
-        return render(request, 'wagtailvideos/videos/results.html', {
+        response = render(request, 'wagtailvideos/videos/results.html', {
             'vidoes': videos,
             'query_string': query_string,
             'is_searching': bool(query_string),
         })
+        return response
     else:
-        return render(request, 'wagtailvideos/videos/index.html', {
+        response = render(request, 'wagtailvideos/videos/index.html', {
             'videos': videos,
             'query_string': query_string,
             'is_searching': bool(query_string),
@@ -61,6 +62,7 @@ def index(request):
             'popular_tags': Video.popular_tags(),
             'current_collection': current_collection,
         })
+        return response
 
 
 def edit(request, video_id):
@@ -82,7 +84,9 @@ def edit(request, video_id):
                 # Set new image file size
                 video.file_size = video.file.size
 
-            form.save()
+            video = form.save()
+            video.thumbnail = video.get_thumbnail()
+            video.save()
 
             # Reindex the image to make sure all tags are indexed
             for backend in get_search_backends():

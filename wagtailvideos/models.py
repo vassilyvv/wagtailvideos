@@ -15,7 +15,6 @@ from django.core.files.base import ContentFile
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
-from django.utils.six import StringIO
 from django.utils.translation import ugettext_lazy as _
 from taggit.managers import TaggableManager
 from unidecode import unidecode
@@ -26,7 +25,7 @@ from wagtail.wagtailsearch import index
 from wagtail.wagtailsearch.queryset import SearchableQuerySetMixin
 
 
-class ImageQuerySet(SearchableQuerySetMixin, models.QuerySet):
+class VideoQuerySet(SearchableQuerySetMixin, models.QuerySet):
     pass
 
 
@@ -51,7 +50,7 @@ class AbstractVideo(CollectionMember, TagSearchable):
 
     file_size = models.PositiveIntegerField(null=True, editable=False)
 
-    objects = ImageQuerySet.as_manager()
+    objects = VideoQuerySet.as_manager()
 
     def is_stored_locally(self):
         """
