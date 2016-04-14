@@ -12,21 +12,18 @@ from wagtailvideos.forms import VideoInsertionForm, get_video_form
 from wagtailvideos.models import get_video_model
 
 
-def get_video_json(image):
+def get_video_json(video):
     """
     helper function: given an image, return the json to pass back to the
     image chooser panel
     """
-    preview_image = image.get_rendition('max-165x165')
 
     return json.dumps({
-        'id': image.id,
-        'edit_link': reverse('wagtailimages:edit', args=(image.id,)),
-        'title': image.title,
+        'id': video.id,
+        'edit_link': reverse('wagtailvideos:edit', args=(video.id,)),
+        'title': video.title,
         'preview': {
-            'url': preview_image.url,
-            'width': preview_image.width,
-            'height': preview_image.height,
+            'url': video.thumbnail.url,
         }
     })
 
@@ -97,7 +94,7 @@ def video_chosen(request, video_id):
     video = get_object_or_404(get_video_model(), id=video_id)
 
     return render_modal_workflow(
-        request, None, 'wagtailvideos/chooser/image_chosen.js',
+        request, None, 'wagtailvideos/chooser/video_chosen.js',
         {'video_json': get_video_json(video)}
     )
 

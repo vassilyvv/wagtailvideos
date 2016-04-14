@@ -12,7 +12,7 @@ A wagtail module for uploading and displaying videos in various codecs.
 Installing
 ==========
 
-**This package is not on PyPI yet**
+**This package is not on PyPI yet**yayyy
 Install using pip::
 
     pip install wagtailvideos
