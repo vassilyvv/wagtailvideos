@@ -2,12 +2,18 @@ from django import forms
 from django.forms.models import modelform_factory
 from django.utils.translation import ugettext as _
 from wagtail.wagtailadmin import widgets
-from wagtail.wagtailadmin.forms import \
-    collection_member_permission_formset_factory
+from wagtail.wagtailadmin.forms import (BaseCollectionMemberForm,
+                                        collection_member_permission_formset_factory)
+
 from wagtailvideos.fields import WagtailVideoField
 from wagtailvideos.formats import get_video_formats
 from wagtailvideos.models import Video
+from wagtailvideos.permissions import \
+    permission_policy as video_permission_policy
 
+
+class BaseVideoForm(BaseCollectionMemberForm):
+    permission_policy = video_permission_policy
 
 # Callback to allow us to override the default form field for the image file field
 def formfield_for_dbfield(db_field, **kwargs):
@@ -26,10 +32,12 @@ def get_video_form(model):
         # cause dubious results when multiple collections exist (e.g adding the
         # document to the root collection where the user may not have permission) -
         # and when only one collection exists, it will get hidden anyway.
+        print('collection not found')
         fields = list(fields) + ['collection']
 
     return modelform_factory(
         model,
+        form=BaseVideoForm,
         fields=fields,
         formfield_callback=formfield_for_dbfield,
         # set the 'file' widget to a FileInput rather than the default ClearableFileInput
@@ -38,10 +46,6 @@ def get_video_form(model):
         widgets={
             'tags': widgets.AdminTagWidget,
             'file': forms.FileInput(),
-            'focal_point_x': forms.HiddenInput(attrs={'class': 'focal_point_x'}),
-            'focal_point_y': forms.HiddenInput(attrs={'class': 'focal_point_y'}),
-            'focal_point_width': forms.HiddenInput(attrs={'class': 'focal_point_width'}),
-            'focal_point_height': forms.HiddenInput(attrs={'class': 'focal_point_height'}),
         })
 
 
