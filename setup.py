@@ -18,7 +18,8 @@ setup(
     url='https://github.com/takeflight/wagtailvideos',
 
     install_requires=[
-        'wagtail>=1.0',
+        'wagtail>=1.4',
+        'django-enumchoicefield==0.6.0',
     ],
     zip_safe=False,
     license='BSD License',
@@ -27,6 +28,8 @@ setup(
 
     include_package_data=True,
     package_data={},
+
+
 
     classifiers=[
         'Environment :: Web Environment',

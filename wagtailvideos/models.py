@@ -7,8 +7,7 @@ import subprocess
 import tempfile
 from tempfile import NamedTemporaryFile
 
-from PIL import Image
-
+import django
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.core.files.base import ContentFile
@@ -16,6 +15,8 @@ from django.core.urlresolvers import reverse
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
+from enum import Enum
+from PIL import Image
 from taggit.managers import TaggableManager
 from unidecode import unidecode
 from wagtail.wagtailadmin.taggable import TagSearchable
@@ -24,6 +25,13 @@ from wagtail.wagtailcore.models import CollectionMember
 from wagtail.wagtailsearch import index
 from wagtail.wagtailsearch.queryset import SearchableQuerySetMixin
 
+from enumchoicefield import ChoiceEnum, EnumChoiceField
+
+
+class MediaFormats(ChoiceEnum):
+    webm = 'VP8 and Vorbis in WebM'
+    mp4 = 'H.264 and MP3 in Mp4'
+    ogg = 'Theora and Voris in Ogg'
 
 class VideoQuerySet(SearchableQuerySetMixin, models.QuerySet):
     pass
@@ -76,7 +84,7 @@ class AbstractVideo(CollectionMember, TagSearchable):
         return self.file_size
 
     def get_upload_to(self, filename):
-        folder_name = 'original_images'
+        folder_name = 'original_videos'
         filename = self.file.field.storage.get_valid_name(filename)
 
         # do a unidecode in the filename and then
@@ -104,9 +112,6 @@ class AbstractVideo(CollectionMember, TagSearchable):
 
     def __str__(self):
         return self.title
-
-    def get_rendition(self, filter):
-        pass # TODO
 
     def get_thumbnail(self):
         file_path = self.file.path
@@ -151,6 +156,85 @@ class AbstractVideo(CollectionMember, TagSearchable):
         from wagtail.wagtailimages.permissions import permission_policy
         return permission_policy.user_has_permission_for_instance(user, 'change', self)
 
+    @classmethod
+    def get_transcode_model(cls):
+        if django.VERSION >= (1, 9):
+            return cls.transcodes.rel.related_model
+        else:
+            return cls.transcodes.related.related_model
+
+    def get_transcode(self, media_format):
+        # TODO check media_format is MediaFormat
+        Transcode = self.get_transcode_model()
+
+        try:
+            return self.transcodes.get(media_format=media_format)
+        except Transcode.DoesNotExist:
+            output_dir = tempfile.mkdtemp()
+
+            transcode_filename = os.path.splitext(
+                os.path.basename(self.file.path))[0] + '.' + media_format.name
+
+            transcoded_file = self.do_transcode(
+                media_format, self.file.path, output_dir, transcode_filename)
+
+            if transcoded_file:
+                transcode, created = self.transcodes.get_or_create(
+                    media_format=media_format,
+                    defaults={'file': transcoded_file}
+                )
+                return transcode
+            else:
+                # TODO handle transcode failure
+                return None
+
+    def do_transcode(self, media_format, input_file, output_dir, transcode_name):
+        output_file = os.path.join(output_dir, transcode_name)
+        FNULL = open(os.devnull, 'r')
+        try:
+            if media_format is MediaFormats.ogg:
+                subprocess.check_call([
+                    'ffmpeg',
+                    '-i', input_file,
+                    '-codec:v', 'libtheora',
+                    '-qscale:v', '7',
+                    '-codec:a', 'libvorbis',
+                    '-qscale:a', '5',
+                    output_file,
+                ], stdin=FNULL)
+            elif media_format is MediaFormats.mp4:
+                subprocess.check_call([
+                    'ffmpeg',
+                    '-i', input_file,
+                    '-codec:v', 'libx264',
+                    '-preset', 'slow', # TODO Checkout other presets
+                    '-crf', '22',
+                    '-codec:a', 'copy',
+                    output_file,
+                ])
+            elif media_format is MediaFormats.webm:
+                subprocess.check_call([
+                    'ffmpeg',
+                    '-i', input_file,
+                    '-codec:v', 'libvpx',
+                    '-crf', '10',
+                    '-b:v', '1M',
+                    '-codec:a', 'libvorbis',
+                    output_file,
+                ])
+            else:
+                return None
+            transcoded_file = ContentFile(open(output_file, 'rb').read(), transcode_name)
+
+        except subprocess.CalledProcessError:
+            return None
+
+        finally:
+            shutil.rmtree(output_dir, ignore_errors=True)
+
+        return transcoded_file
+
+
     class Meta:
         abstract = True
 
@@ -182,3 +266,30 @@ def get_video_model():
             settings.WAGTAILIMAGES_IMAGE_MODEL
         )
     return image_model
+
+
+class AbstractVideoTranscode(models.Model):
+    media_format = EnumChoiceField(MediaFormats)
+    file = models.FileField(
+        verbose_name=_('file'), upload_to=get_upload_to) # FIXME get_transcode_upload_to
+
+    @property
+    def url(self):
+        return self.file.url
+
+    def get_upload_to(self, filename):
+        folder_name = 'video_transcodes'
+        filename = self.file.field.storage.get_valid_name(filename)
+        return os.path.join(folder_name, filename)
+
+    class Meta:
+        abstract = True
+
+
+class VideoTranscode(AbstractVideoTranscode):
+    video = models.ForeignKey(Video, related_name='transcodes')
+
+    class Meta:
+        unique_together = (
+            ('video', 'media_format')
+        )
