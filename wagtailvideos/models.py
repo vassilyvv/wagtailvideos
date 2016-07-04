@@ -142,15 +142,12 @@ class AbstractVideo(CollectionMember, TagSearchable):
         super(AbstractVideo, self).save(**kwargs)
 
     @property
-    def filename(self):
-        return os.path.basename(self.file.name)
+    def url(self):
+        return self.file.url
 
     @property
-    def default_alt_text(self):
-        # by default the alt text field (used in rich text insertion) is populated
-        # from the title. Subclasses might provide a separate alt field, and
-        # override this
-        return self.title
+    def filename(self):
+        return os.path.basename(self.file.name)
 
     def is_editable_by_user(self, user):
         from wagtail.wagtailimages.permissions import permission_policy
@@ -172,8 +169,7 @@ class AbstractVideo(CollectionMember, TagSearchable):
         except Transcode.DoesNotExist:
             output_dir = tempfile.mkdtemp()
 
-            transcode_filename = os.path.splitext(
-                os.path.basename(self.file.path))[0] + '.' + media_format.name
+            transcode_filename = os.path.splitext(self.filename)[0] + '.' + media_format.name
 
             transcoded_file = self.do_transcode(
                 media_format, self.file.path, output_dir, transcode_filename)
@@ -257,12 +253,13 @@ def get_video_model():
     except AttributeError:
         return Video
     except ValueError:
-        raise ImproperlyConfigured("WAGTAILIMAGES_IMAGE_MODEL must be of the form 'app_label.model_name'")
+        raise ImproperlyConfigured("WAGTAILVIDEOS_VIDEO_MODEL must be of the form 'app_label.model_name'")
 
+    #TODO is this neccescary ??
     image_model = apps.get_model(app_label, model_name)
     if image_model is None:
         raise ImproperlyConfigured(
-            "WAGTAILIMAGES_IMAGE_MODEL refers to model '%s' that has not been installed" %
+            "WAGTAILVIDEOS_VIDEO_MODEL refers to model '%s' that has not been installed" %
             settings.WAGTAILIMAGES_IMAGE_MODEL
         )
     return image_model

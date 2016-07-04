@@ -10,6 +10,7 @@ from wagtail.wagtailadmin import messages
 from wagtail.wagtailadmin.forms import SearchForm
 from wagtail.wagtailcore.models import Collection, Site
 from wagtail.wagtailsearch.backends import get_search_backends
+
 from wagtailvideos.forms import URLGeneratorForm, get_video_form
 from wagtailvideos.models import get_video_model
 
@@ -122,6 +123,7 @@ def edit(request, video_id):
         'form': form,
         'url_generator_enabled': url_generator_enabled,
         'filesize': video.get_file_size(),
+        'transcodes': video.transcodes.all(),
     })
 
 

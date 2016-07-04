@@ -51,19 +51,18 @@
             <video style='max-width:100%;height:auto;' {# FIXME Inline styles #} preload="auto" controls="true" poster='{{video.thumbnail.url}}'>
                 <source src="{{video.file.url}}" type='video/mp4'/>
             </video>
-
-            <div class="focal-point-chooser"
-                style="max-width: {{ rendition.width }}px; max-height: {{ rendition.height }}px;"
-                data-focal-point-x="{{ image.focal_point_x }}"
-                data-focal-point-y="{{ image.focal_point_y }}"
-                data-focal-point-width="{{ image.focal_point_width }}"
-                data-focal-point-height="{{ image.focal_point_height }}">
-
-                <img {{ rendition.attrs }} data-original-width="{{ image.width }}" data-original-height="{{ image.height }}" class="show-transparency">
-
-                <div class="current-focal-point-indicator{% if not image.focal_point %} hidden{% endif %}"></div>
-            </div>
-
+			{% if transcodes %}
+				<h3>Available Transcodes</h3>
+				<ul>
+				{% for transcode in transcodes %}
+					<li>{{ transcode.media_format }}</li>
+				{% endfor %}
+			</ul>
+			{% else %}
+				<h3>No transcodes found</h3>
+				<p>If you wish to generate HTML5 compliant transcodes use the button below. This may take a while.</p>
+				<button>Generate Transcodes</button>
+			{% endif %}
         </div>
         <div class="col2 ">
             {% if url_generator_enabled %}
