@@ -149,6 +149,10 @@ class AbstractVideo(CollectionMember, TagSearchable):
     def filename(self):
         return os.path.basename(self.file.name)
 
+    @property
+    def file_ext(self):
+        return os.path.splitext(self.filename)[1][1:]
+
     def is_editable_by_user(self, user):
         from wagtail.wagtailimages.permissions import permission_policy
         return permission_policy.user_has_permission_for_instance(user, 'change', self)
