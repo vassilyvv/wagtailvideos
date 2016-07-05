@@ -8,14 +8,18 @@ from django.views.decorators.vary import vary_on_headers
 from wagtail.utils.pagination import paginate
 from wagtail.wagtailadmin import messages
 from wagtail.wagtailadmin.forms import SearchForm
+from wagtail.wagtailadmin.utils import PermissionPolicyChecker
 from wagtail.wagtailcore.models import Collection, Site
 from wagtail.wagtailsearch.backends import get_search_backends
 
 from wagtailvideos.forms import (URLGeneratorForm, VideoTranscodeAdminForm,
                                  get_video_form)
 from wagtailvideos.models import get_video_model
+from wagtailvideos.permissions import permission_policy
 
+permission_checker = PermissionPolicyChecker(permission_policy)
 
+@permission_checker.require_any('add', 'change', 'delete')
 @vary_on_headers('X-Requested-With')
 def index(request):
     Video = get_video_model()
@@ -66,7 +70,7 @@ def index(request):
         })
         return response
 
-
+@permission_checker.require('change')
 def edit(request, video_id):
     Video = get_video_model()
     VideoForm = get_video_form(Video)
@@ -103,13 +107,6 @@ def edit(request, video_id):
     else:
         form = VideoForm(instance=video)
 
-    # Check if we should enable the frontend url generator
-    try:
-        reverse('wagtailvideos_serve', args=('foo', '1', 'bar'))
-        url_generator_enabled = True
-    except NoReverseMatch:
-        url_generator_enabled = False
-
     if video.is_stored_locally():
         # Give error if image file doesn't exist
         if not os.path.isfile(video.file.path):
@@ -122,10 +119,10 @@ def edit(request, video_id):
     return render(request, "wagtailvideos/videos/edit.html", {
         'video': video,
         'form': form,
-        'url_generator_enabled': url_generator_enabled,
         'filesize': video.get_file_size(),
         'transcodes': video.transcodes.all(),
-        'transcode_form': VideoTranscodeAdminForm(video=video)
+        'transcode_form': VideoTranscodeAdminForm(video=video),
+        'user_can_delete': permission_policy.user_has_permission_for_instance(request.user, 'delete', video)
     })
 
 
@@ -141,63 +138,20 @@ def create_transcode(request, video_id):
         transcode_form.save()
     return redirect('wagtailvideos:edit', video_id)
 
-
-# TODO was dis?
-def url_generator(request, image_id):
-    image = get_object_or_404(get_video_model(), id=image_id)
-
-    form = URLGeneratorForm(initial={
-        'filter_method': 'original',
-        'width': image.width,
-        'height': image.height,
-    })
-
-    return render(request, "wagtailvideos/images/url_generator.html", {
-        'image': image,
-        'form': form,
-    })
-
-
-def generate_url(request, image_id, filter_spec):
-    # Get the image
-    Image = get_video_model()
-    try:
-        Image.objects.get(id=image_id)
-    except Image.DoesNotExist:
-        return JsonResponse({
-            'error': "Cannot find image."
-        }, status=404)
-
-    # Check if this user has edit permission on this image
-
-    # Generate url
-    url = reverse('wagtailvideos_serve', args=(image_id, filter_spec))
-
-    # Get site root url
-    try:
-        site_root_url = Site.objects.get(is_default_site=True).root_url
-    except Site.DoesNotExist:
-        site_root_url = Site.objects.first().root_url
-
-    # Generate preview url
-    preview_url = reverse('wagtailvideos:preview', args=(image_id, filter_spec))
-
-    return JsonResponse({'url': site_root_url + url, 'preview_url': preview_url}, status=200)
-
-
-def delete(request, image_id):
-    image = get_object_or_404(get_video_model(), id=image_id)
+@permission_checker.require('delete')
+def delete(request, video_id):
+    video = get_object_or_404(get_video_model(), id=video_id)
 
     if request.POST:
-        image.delete()
-        messages.success(request, _("Image '{0}' deleted.").format(image.title))
+        video.delete()
+        messages.success(request, _("Video '{0}' deleted.").format(video.title))
         return redirect('wagtailvideos:index')
 
-    return render(request, "wagtailvideos/images/confirm_delete.html", {
-        'image': image,
+    return render(request, "wagtailvideos/videos/confirm_delete.html", {
+        'video': video,
     })
 
-
+@permission_checker.require('add')
 def add(request):
     ImageModel = get_video_model()
     ImageForm = get_video_form(ImageModel)

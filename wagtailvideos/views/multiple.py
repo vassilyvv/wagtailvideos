@@ -6,6 +6,7 @@ from django.views.decorators.http import require_POST
 from django.views.decorators.vary import vary_on_headers
 from wagtail.wagtailadmin.utils import PermissionPolicyChecker
 from wagtail.wagtailsearch.backends import get_search_backends
+
 from wagtailvideos.fields import ALLOWED_EXTENSIONS
 from wagtailvideos.forms import get_video_form
 from wagtailvideos.models import get_video_model
@@ -62,14 +63,14 @@ def add(request):
             video.file_size = video.file.size
             video.save()
 
-            # Success! Send back an edit form for this image to the user
+            # Success! Send back an edit form
             return JsonResponse({
                 'success': True,
                 'video_id': int(video.id),
                 'form': render_to_string('wagtailvideos/multiple/edit_form.html', {
                     'video': video,
                     'form': get_video_edit_form(Video)(
-                        instance=video, prefix='image-%d' % video.id),
+                        instance=video, prefix='video-%d' % video.id),
                 }, request=request),
             })
         else:

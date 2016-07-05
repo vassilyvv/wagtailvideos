@@ -13,6 +13,8 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.files.base import ContentFile
 from django.core.urlresolvers import reverse
 from django.db import models
+from django.db.models.signals import pre_delete
+from django.dispatch.dispatcher import receiver
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from enum import Enum
@@ -244,6 +246,13 @@ class Video(AbstractVideo):
     )
 
 
+# Delete files when model is deleted
+@receiver(pre_delete, sender=Video)
+def video_delete(sender, instance, **kwargs):
+    print('Video pre delete received')
+    instance.file.delete(False)
+
+
 def get_video_model():
     from django.conf import settings
     from django.apps import apps
@@ -290,3 +299,8 @@ class VideoTranscode(AbstractVideoTranscode):
         unique_together = (
             ('video', 'media_format')
         )
+
+# Delete files when model is deleted
+@receiver(pre_delete, sender=VideoTranscode)
+def transcode_delete(sender, instance, **kwargs):
+    instance.file.delete(False)

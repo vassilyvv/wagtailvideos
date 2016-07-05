@@ -1,5 +1,5 @@
 {% extends "wagtailadmin/base.html" %}
-{% load wagtailimages_tags staticfiles i18n wagtailvideos_tags %}
+{% load staticfiles i18n wagtailvideos_tags %}
 {% block titletag %}{% blocktrans with title=video.title %}Editing video {{ title }}{% endblocktrans %}{% endblock %}
 
 {% block extra_js %}
@@ -66,11 +66,6 @@
 			{% endif %}
         </div>
         <div class="col2 ">
-            {% if url_generator_enabled %}
-                <a href="{% url 'wagtailvideos:url_generator' video.id %}" class="button bicolor icon icon-link">{% trans "URL Generator" %}</a>
-                <hr />
-            {% endif %}
-
             <img src='{{video.thumbnail.url}}' />
 
             <dl>

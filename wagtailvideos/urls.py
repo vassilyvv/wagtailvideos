@@ -6,12 +6,8 @@ urlpatterns = [
     url(r'^$', videos.index, name='index'),
     url(r'^(\d+)/$', videos.edit, name='edit'),
     url(r'^(\d+)/delete/$', videos.delete, name='delete'),
-    url(r'^(\d+)/generate_url/$', videos.url_generator, name='url_generator'),
-    url(r'^(\d+)/generate_url/(.*)/$', videos.generate_url, name='generate_url'),
-
     url(r'^(\d+)/create_transcode/$', videos.create_transcode, name='create_transcode'),
 
-    #url(r'^(\d+)/preview/(.*)/$', videos.preview, name='preview'),
     url(r'^add/$', videos.add, name='add'),
     url(r'^usage/(\d+)/$', videos.usage, name='video_usage'),
 

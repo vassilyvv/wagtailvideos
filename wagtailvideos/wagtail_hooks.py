@@ -43,5 +43,5 @@ def editor_js():
 def register_images_menu_item():
     return MenuItem(
         _('Videos'), urlresolvers.reverse('wagtailvideos:index'),
-        name='videos', classnames='icon icon-video', order=300
+        name='videos', classnames='icon icon-media', order=300
     )
