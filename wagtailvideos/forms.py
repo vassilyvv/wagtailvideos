@@ -5,9 +5,10 @@ from wagtail.wagtailadmin import widgets
 from wagtail.wagtailadmin.forms import (BaseCollectionMemberForm,
                                         collection_member_permission_formset_factory)
 
+from enumchoicefield.forms import EnumField
 from wagtailvideos.fields import WagtailVideoField
 from wagtailvideos.formats import get_video_formats
-from wagtailvideos.models import Video
+from wagtailvideos.models import MediaFormats, Video
 from wagtailvideos.permissions import \
     permission_policy as video_permission_policy
 
@@ -47,6 +48,19 @@ def get_video_form(model):
             'tags': widgets.AdminTagWidget,
             'file': forms.FileInput(),
         })
+
+
+class VideoTranscodeAdminForm(forms.Form):
+    media_format = EnumField(MediaFormats)
+
+    def __init__(self, data=None, *, video, **kwargs):
+        super().__init__(data, **kwargs)
+        self.video = video
+
+    def save(self):
+        media_format = self.cleaned_data['media_format']
+        self.video.do_transcode(media_format)
+
 
 
 class VideoInsertionForm(forms.Form):

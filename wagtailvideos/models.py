@@ -33,6 +33,7 @@ class MediaFormats(ChoiceEnum):
     mp4 = 'H.264 and MP3 in Mp4'
     ogg = 'Theora and Voris in Ogg'
 
+
 class VideoQuerySet(SearchableQuerySetMixin, models.QuerySet):
     pass
 
@@ -66,7 +67,6 @@ class AbstractVideo(CollectionMember, TagSearchable):
         """
         try:
             self.file.path
-
             return True
         except NotImplementedError:
             return False
@@ -145,13 +145,15 @@ class AbstractVideo(CollectionMember, TagSearchable):
     def url(self):
         return self.file.url
 
-    @property
-    def filename(self):
-        return os.path.basename(self.file.name)
+    def filename(self, include_ext=True):
+        if include_ext:
+            return os.path.basename(self.file.name)
+        else:
+            return os.path.splitext(os.path.basename(self.file.name))[0]
 
     @property
     def file_ext(self):
-        return os.path.splitext(self.filename)[1][1:]
+        return os.path.splitext(self.filename())[1][1:]
 
     def is_editable_by_user(self, user):
         from wagtail.wagtailimages.permissions import permission_policy
@@ -165,30 +167,19 @@ class AbstractVideo(CollectionMember, TagSearchable):
             return cls.transcodes.related.related_model
 
     def get_transcode(self, media_format):
-        # TODO check media_format is MediaFormat
         Transcode = self.get_transcode_model()
-
         try:
             return self.transcodes.get(media_format=media_format)
         except Transcode.DoesNotExist:
-            output_dir = tempfile.mkdtemp()
+            return self.do_transcode(media_format)
 
-            transcode_filename = os.path.splitext(self.filename)[0] + '.' + media_format.name
+    def do_transcode(self, media_format, force=False):
+        input_file = self.file.path
+        output_dir = tempfile.mkdtemp()
+        transcode_name = "{0}.{1}".format(
+            self.filename(include_ext=False),
+            media_format.name)
 
-            transcoded_file = self.do_transcode(
-                media_format, self.file.path, output_dir, transcode_filename)
-
-            if transcoded_file:
-                transcode, created = self.transcodes.get_or_create(
-                    media_format=media_format,
-                    defaults={'file': transcoded_file}
-                )
-                return transcode
-            else:
-                # TODO handle transcode failure
-                return None
-
-    def do_transcode(self, media_format, input_file, output_dir, transcode_name):
         output_file = os.path.join(output_dir, transcode_name)
         FNULL = open(os.devnull, 'r')
         try:
@@ -224,7 +215,8 @@ class AbstractVideo(CollectionMember, TagSearchable):
                 ])
             else:
                 return None
-            transcoded_file = ContentFile(open(output_file, 'rb').read(), transcode_name)
+            transcoded_file = ContentFile(
+                open(output_file, 'rb').read(), transcode_name)
 
         except subprocess.CalledProcessError:
             return None
@@ -232,8 +224,12 @@ class AbstractVideo(CollectionMember, TagSearchable):
         finally:
             shutil.rmtree(output_dir, ignore_errors=True)
 
-        return transcoded_file
+        transcode, created = self.transcodes.get_or_create(
+            media_format=media_format,
+            defaults={'file': transcoded_file}
+        )
 
+        return transcode
 
     class Meta:
         abstract = True

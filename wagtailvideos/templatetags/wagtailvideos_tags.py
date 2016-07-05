@@ -32,6 +32,7 @@ def video(parser, token):
                     extra_attrs[param] = ''  # attributes without values e.g. autoplay, controls
     return VideoNode(video_expr, html5, extra_attrs)
 
+
 class VideoNode(template.Node):
     def __init__(self, video, html5=False, attrs={}):
         self.video = template.Variable(video)
@@ -42,11 +43,11 @@ class VideoNode(template.Node):
         video = self.video.resolve(context)
         if not self.html5:
             return mark_safe("<video {0}><source  src='{1}' type='video/{2}'></video>"
-                             .format(flatatt(self.attrs), video.url, video.file_ext)) # FIXME get mimetype properly
+                             .format(flatatt(self.attrs), video.url, video.file_ext)) # FIXME get mimetype properly (extension is not always reliable)
         else:
             transcodes = []
             for media_format in MediaFormats:
-                transcode = video.get_transcode(media_format) # FIXME this is blocking
+                transcode = video.get_transcode(media_format) # FIXME this is blocking when no transcodes are found
                 transcodes.append("<source src='{0}' type='video/{1}' >".format(transcode.url, transcode.media_format.name))
             return mark_safe(
                 "<video {0}>{1}</video".format(flatatt(self.attrs), "\n".join(transcodes)))

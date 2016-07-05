@@ -1,7 +1,7 @@
 import os
 
 from django.core.urlresolvers import NoReverseMatch, reverse
-from django.http import JsonResponse
+from django.http import HttpResponseNotAllowed, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import ugettext as _
 from django.views.decorators.vary import vary_on_headers
@@ -11,7 +11,8 @@ from wagtail.wagtailadmin.forms import SearchForm
 from wagtail.wagtailcore.models import Collection, Site
 from wagtail.wagtailsearch.backends import get_search_backends
 
-from wagtailvideos.forms import URLGeneratorForm, get_video_form
+from wagtailvideos.forms import (URLGeneratorForm, VideoTranscodeAdminForm,
+                                 get_video_form)
 from wagtailvideos.models import get_video_model
 
 
@@ -124,9 +125,24 @@ def edit(request, video_id):
         'url_generator_enabled': url_generator_enabled,
         'filesize': video.get_file_size(),
         'transcodes': video.transcodes.all(),
+        'transcode_form': VideoTranscodeAdminForm(video=video)
     })
 
 
+def create_transcode(request, video_id):
+    if request.method != 'POST':
+        return HttpResponseNotAllowed(['POST'])
+
+    Video = get_video_model()
+    video = get_object_or_404(Video, id=video_id)
+    transcode_form = VideoTranscodeAdminForm(request.POST, video=video)
+
+    if transcode_form.is_valid():
+        transcode_form.save()
+    return redirect('wagtailvideos:edit', video_id)
+
+
+# TODO was dis?
 def url_generator(request, image_id):
     image = get_object_or_404(get_video_model(), id=image_id)
 

@@ -1,5 +1,5 @@
 {% extends "wagtailadmin/base.html" %}
-{% load wagtailimages_tags staticfiles i18n %}
+{% load wagtailimages_tags staticfiles i18n wagtailvideos_tags %}
 {% block titletag %}{% blocktrans with title=video.title %}Editing video {{ title }}{% endblocktrans %}{% endblock %}
 
 {% block extra_js %}
@@ -47,10 +47,12 @@
         </div>
         <div class="col5 divider-after">
             <h2 class="label">{% trans "Video preview" %}</h2>
-
-            <video style='max-width:100%;height:auto;' {# FIXME Inline styles #} preload="auto" controls="true" poster='{{video.thumbnail.url}}'>
-                <source src="{{video.file.url}}" type='video/mp4'/>
-            </video>
+			{% video video controls style=max-width:100% %}
+			<form action="{% url 'wagtailvideos:create_transcode' video.id %}" method="POST">
+				{% csrf_token %}
+				{{ transcode_form.media_format }}
+				<input type='submit' />
+			</form>
 			{% if transcodes %}
 				<h3>Available Transcodes</h3>
 				<ul>
@@ -60,8 +62,7 @@
 			</ul>
 			{% else %}
 				<h3>No transcodes found</h3>
-				<p>If you wish to generate HTML5 compliant transcodes use the button below. This may take a while.</p>
-				<button>Generate Transcodes</button>
+				<p>If you wish to generate HTML5 compliant transcodes use the form above. This may take a while.</p>
 			{% endif %}
         </div>
         <div class="col2 ">
