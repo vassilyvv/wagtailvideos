@@ -7,9 +7,10 @@ from wagtail.wagtailadmin.forms import SearchForm
 from wagtail.wagtailadmin.modal_workflow import render_modal_workflow
 from wagtail.wagtailcore.models import Collection
 from wagtail.wagtailsearch.backends import get_search_backends
+
 from wagtailvideos.formats import get_video_format
 from wagtailvideos.forms import VideoInsertionForm, get_video_form
-from wagtailvideos.models import get_video_model
+from wagtailvideos.models import Video
 
 
 def get_video_json(video):
@@ -29,8 +30,6 @@ def get_video_json(video):
 
 
 def chooser(request):
-    Video = get_video_model()
-
     VideoForm = get_video_form(Video)
     uploadform = VideoForm()
 
@@ -91,7 +90,7 @@ def chooser(request):
 
 
 def video_chosen(request, video_id):
-    video = get_object_or_404(get_video_model(), id=video_id)
+    video = get_object_or_404(Video, id=video_id)
 
     return render_modal_workflow(
         request, None, 'wagtailvideos/chooser/video_chosen.js',
@@ -100,7 +99,6 @@ def video_chosen(request, video_id):
 
 
 def chooser_upload(request):
-    Video = get_video_model()
     VideoForm = get_video_form(Video)
 
     searchform = SearchForm()
@@ -140,7 +138,7 @@ def chooser_upload(request):
 
 
 def chooser_select_format(request, video_id):
-    video = get_object_or_404(get_video_model(), id=video_id)
+    video = get_object_or_404(Video, id=video_id)
 
     if request.POST:
         form = VideoInsertionForm(request.POST, initial={'alt_text': video.default_alt_text})

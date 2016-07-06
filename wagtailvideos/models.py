@@ -5,6 +5,7 @@ import os.path
 import shutil
 import subprocess
 import tempfile
+import threading
 from tempfile import NamedTemporaryFile
 
 import django
@@ -176,10 +177,41 @@ class AbstractVideo(CollectionMember, TagSearchable):
             return self.do_transcode(media_format)
 
     def do_transcode(self, media_format, force=False):
-        input_file = self.file.path
+        transcode, created = self.transcodes.get_or_create(
+            media_format=media_format,
+        )
+
+        if transcode.processing is False:
+            transcode.processing = True
+            transcode.save(update_fields=['processing']) # Lock the transcode model
+            TranscodingThread(transcode).start()
+        return None
+
+    class Meta:
+        abstract = True
+
+
+class Video(AbstractVideo):
+    admin_form_fields = (
+        'title',
+        'file',
+        'collection',
+        'tags',
+    )
+
+# TODO move out to utils.py or somewhere appropriate
+class TranscodingThread(threading.Thread):
+    def __init__(self, transcode, **kwargs):
+        super().__init__(**kwargs)
+        self.transcode = transcode
+
+    def run(self):
+        video = self.transcode.video
+        media_format = self.transcode.media_format
+        input_file = video.file.path
         output_dir = tempfile.mkdtemp()
         transcode_name = "{0}.{1}".format(
-            self.filename(include_ext=False),
+            video.filename(include_ext=False),
             media_format.name)
 
         output_file = os.path.join(output_dir, transcode_name)
@@ -226,25 +258,11 @@ class AbstractVideo(CollectionMember, TagSearchable):
         finally:
             shutil.rmtree(output_dir, ignore_errors=True)
 
-        transcode, created = self.transcodes.get_or_create(
-            media_format=media_format,
-            defaults={'file': transcoded_file}
-        )
-
-        return transcode
-
-    class Meta:
-        abstract = True
-
-
-class Video(AbstractVideo):
-    admin_form_fields = (
-        'title',
-        'file',
-        'collection',
-        'tags',
-    )
-
+        self.transcode.processing = False
+        self.transcode.file = transcoded_file
+        self.transcode.save(update_fields=[
+            'processing', 'file'
+        ])
 
 # Delete files when model is deleted
 @receiver(pre_delete, sender=Video)
@@ -253,31 +271,11 @@ def video_delete(sender, instance, **kwargs):
     instance.file.delete(False)
 
 
-def get_video_model():
-    from django.conf import settings
-    from django.apps import apps
-
-    try:
-        app_label, model_name = settings.WAGTAILVIDEOS_VIDEO_MODEL.split('.')
-    except AttributeError:
-        return Video
-    except ValueError:
-        raise ImproperlyConfigured("WAGTAILVIDEOS_VIDEO_MODEL must be of the form 'app_label.model_name'")
-
-    #TODO is this neccescary ??
-    image_model = apps.get_model(app_label, model_name)
-    if image_model is None:
-        raise ImproperlyConfigured(
-            "WAGTAILVIDEOS_VIDEO_MODEL refers to model '%s' that has not been installed" %
-            settings.WAGTAILIMAGES_IMAGE_MODEL
-        )
-    return image_model
-
-
 class AbstractVideoTranscode(models.Model):
     media_format = EnumChoiceField(MediaFormats)
-    file = models.FileField(
-        verbose_name=_('file'), upload_to=get_upload_to) # FIXME get_transcode_upload_to
+    processing = models.BooleanField(default=False)
+    file = models.FileField(null=True,
+        verbose_name=_('file'), upload_to=get_upload_to)
 
     @property
     def url(self):

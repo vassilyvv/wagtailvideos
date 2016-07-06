@@ -14,7 +14,7 @@ from wagtail.wagtailsearch.backends import get_search_backends
 
 from wagtailvideos.forms import (URLGeneratorForm, VideoTranscodeAdminForm,
                                  get_video_form)
-from wagtailvideos.models import get_video_model
+from wagtailvideos.models import Video
 from wagtailvideos.permissions import permission_policy
 
 permission_checker = PermissionPolicyChecker(permission_policy)
@@ -22,9 +22,7 @@ permission_checker = PermissionPolicyChecker(permission_policy)
 @permission_checker.require_any('add', 'change', 'delete')
 @vary_on_headers('X-Requested-With')
 def index(request):
-    Video = get_video_model()
-
-    # Get images (filtered by user permission)
+    # Get Videos (filtered by user permission)
     videos = Video.objects.all()
 
     # Search
@@ -72,7 +70,6 @@ def index(request):
 
 @permission_checker.require('change')
 def edit(request, video_id):
-    Video = get_video_model()
     VideoForm = get_video_form(Video)
 
     video = get_object_or_404(Video, id=video_id)
@@ -130,7 +127,6 @@ def create_transcode(request, video_id):
     if request.method != 'POST':
         return HttpResponseNotAllowed(['POST'])
 
-    Video = get_video_model()
     video = get_object_or_404(Video, id=video_id)
     transcode_form = VideoTranscodeAdminForm(request.POST, video=video)
 
@@ -140,7 +136,7 @@ def create_transcode(request, video_id):
 
 @permission_checker.require('delete')
 def delete(request, video_id):
-    video = get_object_or_404(get_video_model(), id=video_id)
+    video = get_object_or_404(Video, id=video_id)
 
     if request.POST:
         video.delete()
@@ -153,7 +149,9 @@ def delete(request, video_id):
 
 @permission_checker.require('add')
 def add(request):
-    ImageModel = get_video_model()
+    # FIXME try and find where this is used
+    print("\n\n----------------------------ADD HIT---------------------------\n\n")
+    ImageModel = Video
     ImageForm = get_video_form(ImageModel)
 
     if request.POST:
@@ -184,7 +182,7 @@ def add(request):
 
 
 def usage(request, image_id):
-    image = get_object_or_404(get_video_model(), id=image_id)
+    image = get_object_or_404(Video, id=image_id)
 
     paginator, used_by = paginate(request, image.get_usage())
 

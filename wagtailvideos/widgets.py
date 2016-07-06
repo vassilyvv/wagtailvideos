@@ -6,7 +6,7 @@ from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
 from wagtail.wagtailadmin.widgets import AdminChooser
 
-from wagtailvideos.models import get_video_model
+from wagtailvideos.models import Video
 
 
 class AdminVideoChooser(AdminChooser):
@@ -16,7 +16,7 @@ class AdminVideoChooser(AdminChooser):
 
     def __init__(self, **kwargs):
         super(AdminVideoChooser, self).__init__(**kwargs)
-        self.video_model = get_video_model()
+        self.video_model = Video
 
     def render_html(self, name, value, attrs):
         instance, value = self.get_instance_and_id(self.video_model, value)

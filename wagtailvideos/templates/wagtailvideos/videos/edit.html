@@ -57,7 +57,11 @@
 				<h3>Available Transcodes</h3>
 				<ul>
 				{% for transcode in transcodes %}
+					{% if transcode.processing %}
+					<li>{{ transcode.media_format }} (Processing... hold tight) </li>
+					{%else %}
 					<li>{{ transcode.media_format }}</li>
+					{% endif %}
 				{% endfor %}
 			</ul>
 			{% else %}
