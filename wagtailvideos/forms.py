@@ -7,7 +7,6 @@ from wagtail.wagtailadmin.forms import (BaseCollectionMemberForm,
 
 from enumchoicefield.forms import EnumField
 from wagtailvideos.fields import WagtailVideoField
-from wagtailvideos.formats import get_video_formats
 from wagtailvideos.models import MediaFormats, Video
 from wagtailvideos.permissions import \
     permission_policy as video_permission_policy
@@ -64,15 +63,7 @@ class VideoTranscodeAdminForm(forms.Form):
 
 
 class VideoInsertionForm(forms.Form):
-    """
-    Form for selecting parameters of the image (e.g. format) prior to insertion
-    into a rich text area
-    """
-    format = forms.ChoiceField(
-        choices=[(format.name, format.label) for format in get_video_formats()],
-        widget=forms.RadioSelect
-    )
-    alt_text = forms.CharField()
+    pass
 
 
 class URLGeneratorForm(forms.Form):

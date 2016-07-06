@@ -8,7 +8,6 @@ from wagtail.wagtailadmin.modal_workflow import render_modal_workflow
 from wagtail.wagtailcore.models import Collection
 from wagtail.wagtailsearch.backends import get_search_backends
 
-from wagtailvideos.formats import get_video_format
 from wagtailvideos.forms import VideoInsertionForm, get_video_form
 from wagtailvideos.models import Video
 
@@ -144,14 +143,11 @@ def chooser_select_format(request, video_id):
         form = VideoInsertionForm(request.POST, initial={'alt_text': video.default_alt_text})
         if form.is_valid():
 
-            format = get_video_format(form.cleaned_data['format'])
             preview_video = video.get_rendition(format.filter_spec)
 
             video_json = json.dumps({
                 'id': image.id,
                 'title': image.title,
-                'format': format.name,
-                'alt': form.cleaned_data['alt_text'],
                 'class': format.classnames,
                 'edit_link': reverse('wagtailvideos:edit', args=(video.id,)),
                 'preview': {

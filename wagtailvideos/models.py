@@ -185,7 +185,8 @@ class AbstractVideo(CollectionMember, TagSearchable):
             transcode.processing = True
             transcode.save(update_fields=['processing']) # Lock the transcode model
             TranscodingThread(transcode).start()
-        return None
+        else:
+            pass  # TODO Queue?
 
     class Meta:
         abstract = True
@@ -216,66 +217,56 @@ class TranscodingThread(threading.Thread):
 
         output_file = os.path.join(output_dir, transcode_name)
         FNULL = open(os.devnull, 'r')
+        args = ['ffmpeg', '-hide_banner', '-i', input_file]
         try:
             if media_format is MediaFormats.ogg:
-                subprocess.check_call([
-                    'ffmpeg',
-                    '-i', input_file,
+                subprocess.check_output(args + [
                     '-codec:v', 'libtheora',
                     '-qscale:v', '7',
                     '-codec:a', 'libvorbis',
                     '-qscale:a', '5',
                     output_file,
-                ], stdin=FNULL)
+                ], stdin=FNULL, stderr=subprocess.STDOUT)
             elif media_format is MediaFormats.mp4:
-                subprocess.check_call([
-                    'ffmpeg',
-                    '-i', input_file,
+                subprocess.check_call(args + [
                     '-codec:v', 'libx264',
                     '-preset', 'slow', # TODO Checkout other presets
                     '-crf', '22',
                     '-codec:a', 'copy',
                     output_file,
-                ])
+                ], stdin=FNULL, stderr=subprocess.STDOUT)
             elif media_format is MediaFormats.webm:
-                subprocess.check_call([
-                    'ffmpeg',
-                    '-i', input_file,
+                subprocess.check_call(args + [
                     '-codec:v', 'libvpx',
                     '-crf', '10',
                     '-b:v', '1M',
                     '-codec:a', 'libvorbis',
                     output_file,
-                ])
-            else:
-                return None
-            transcoded_file = ContentFile(
+                ], stdin=FNULL, stderr=subprocess.STDOUT)
+            self.transcode.file = ContentFile(
                 open(output_file, 'rb').read(), transcode_name)
-
-        except subprocess.CalledProcessError:
-            return None
+            self.transcode.error_message = ''
+        except subprocess.CalledProcessError as error:
+            self.transcode.error_message = error.output
 
         finally:
+            self.transcode.processing = False
+            self.transcode.save()
             shutil.rmtree(output_dir, ignore_errors=True)
 
-        self.transcode.processing = False
-        self.transcode.file = transcoded_file
-        self.transcode.save(update_fields=[
-            'processing', 'file'
-        ])
 
 # Delete files when model is deleted
 @receiver(pre_delete, sender=Video)
 def video_delete(sender, instance, **kwargs):
-    print('Video pre delete received')
     instance.file.delete(False)
 
 
 class AbstractVideoTranscode(models.Model):
     media_format = EnumChoiceField(MediaFormats)
     processing = models.BooleanField(default=False)
-    file = models.FileField(null=True,
+    file = models.FileField(null=True, blank=True,
         verbose_name=_('file'), upload_to=get_upload_to)
+    error_message = models.TextField(blank=True)
 
     @property
     def url(self):

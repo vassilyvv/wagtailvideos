@@ -38,8 +38,8 @@ class VideoNode(template.Node):
         video = self.video.resolve(context)
         sources = ["<source  src='{1}' type='video/{2}'>"
                          .format(flatatt(self.attrs), video.url, video.file_ext)]  # TODO get mimetype properly (extension is not always reliable)
-        for transcode in video.transcodes.filter(processing=False):
-            sources.append("<source src='{0}' type='video/{1}' >".format(transcode.url, transcode.media_format.name))
+        for transcode in video.transcodes.exclude(processing=True, file=''):
+            sources.append("<source src='{0}' type='video/{1}' >".format(transcode.media_format.value, transcode.media_format.name))
         sources.append("<p>Sorry, your browser doesn't support playback for this video</p>")
         return mark_safe(
-            "<video {0}>{1}</video".format(flatatt(self.attrs), "\n".join(sources)))
+            "<video {0}>{1}</video>".format(flatatt(self.attrs), "\n".join(sources)))
