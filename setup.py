@@ -13,8 +13,8 @@ setup(
     version='0.1.0',
     description="A wagtail module for uploading and displaying videos in various codecs.",
     long_description=readme,
-    author='Liam Brenner',
-    author_email='liam@takeflight.com.au',
+    author='Takeflight',
+    author_email='developers@takeflight.com.au',
     url='https://github.com/takeflight/wagtailvideos',
 
     install_requires=[
