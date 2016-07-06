@@ -106,8 +106,7 @@ class AbstractVideo(CollectionMember, TagSearchable):
 
     @property
     def usage_url(self):
-        return reverse('wagtailvideos:image_usage',
-                       args=(self.id,))
+        return reverse('wagtailvideos:video_usage', args=(self.id,))
 
     search_fields = TagSearchable.search_fields + CollectionMember.search_fields + (
         index.FilterField('uploaded_by_user'),

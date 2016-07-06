@@ -186,7 +186,7 @@ def usage(request, image_id):
 
     paginator, used_by = paginate(request, image.get_usage())
 
-    return render(request, "wagtailvideos/images/usage.html", {
+    return render(request, "wagtailvideos/videos/usage.html", {
         'image': image,
         'used_by': used_by
     })
