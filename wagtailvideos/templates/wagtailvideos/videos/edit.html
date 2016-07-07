@@ -37,7 +37,7 @@
 
                     {% endfor %}
                     <li>
-                        <input type="submit" value="{% trans 'Save' %}" />
+                        <input type="submit" class="button" value="{% trans 'Save' %}" />
                         {% if user_can_delete %}
                             <a href="{% url 'wagtailvideos:delete' video.id %}" class="button button-secondary no">{% trans "Delete video" %}</a>
                         {% endif %}
@@ -48,29 +48,38 @@
         <div class="col5 divider-after">
             <h2 class="label">{% trans "Video preview" %}</h2>
 			{% video video controls style=max-width:100% %}
-			<form action="{% url 'wagtailvideos:create_transcode' video.id %}" method="POST">
-				{% csrf_token %}
-				{{ transcode_form.media_format }}
-				<input type='submit' />
-			</form>
+			<h3 class="label">Transcodes</h3>
+			<p>If you wish to generate HTML5 compliant transcodes use the form below. This may take a while dependung in the length of the video.</p>
 			{% if transcodes %}
-				<h3>Available Transcodes</h3>
-				<ul>
-				{% for transcode in transcodes %}
-					<li>
-						{{ transcode.media_format }}
-						{% if transcode.processing %} (Processing... hold tight) {% endif %}
-						{% if transcode.error_message %} <pre> {{ transcode.error_message }}</pre> {% endif %}
-					</li>
-				{% endfor %}
+			<h3 class="label">Available Transcodes</h3>
+			<ul>
+			{% for transcode in transcodes %}
+				<li>
+					{{ transcode.media_format }}
+					{% if transcode.processing %} (Processing... hold tight) {% endif %}
+					{% if transcode.error_message %} <pre> {{ transcode.error_message }}</pre> {% endif %}
+				</li>
+			{% endfor %}
 			</ul>
-			{% else %}
-				<h3>No transcodes found</h3>
-				<p>If you wish to generate HTML5 compliant transcodes use the form above. This may take a while.</p>
 			{% endif %}
+			<form action="{% url 'wagtailvideos:create_transcode' video.id %}" method="POST">
+				<ul class="fields">
+					{% csrf_token %}
+					<li>
+						<div class='input'>
+							{{ transcode_form.media_format }}
+						</div>
+					</li>
+					<li>
+						<input class="button" type='submit' value="Start" />
+					</li>
+				</ul>
+			</form>
         </div>
         <div class="col2 ">
             <dl>
+				<dt>{% trans "Thumbnail" %}</dt>
+				<dd><img src='{{ video.thumbnail.url }}' /></dd>
                 <dt>{% trans "Filesize" %}</dt>
                 <dd>{% if filesize %}{{ filesize|filesizeformat }}{% else %}{% trans "File not found" %}{% endif %}</dd>
             </dl>
