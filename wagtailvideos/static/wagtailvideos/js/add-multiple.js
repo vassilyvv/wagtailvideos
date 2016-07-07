@@ -16,10 +16,6 @@ $(function() {
         dropZone: $('.drop-zone'),
         acceptFileTypes: window.fileupload_opts.accepted_file_types,
         maxFileSize: window.fileupload_opts.max_file_size,
-        previewMinWidth:150,
-        previewMaxWidth:150,
-        previewMinHeight:150,
-        previewMaxHeight:150,
         messages: {
             acceptFileTypes: window.fileupload_opts.errormessages.accepted_file_types,
             maxFileSize: window.fileupload_opts.errormessages.max_file_size
@@ -43,8 +39,8 @@ $(function() {
                 });
 
                 data.context.find('.preview .thumb').each(function(index, elm) {
-                    $(elm).addClass('hasthumb')
-                    $(elm).append(data.files[index].preview);
+                    debugger;
+                    $(elm).addClass('hasthumb');
                 });
 
             }).done(function() {

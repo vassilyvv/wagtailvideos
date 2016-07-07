@@ -17,7 +17,7 @@
 
 {% block content %}
     {% trans "Editing" as editing_str %}
-    {% include "wagtailadmin/shared/header.html" with title=editing_str subtitle=video.title icon="image" usage_object=video %}
+    {% include "wagtailadmin/shared/header.html" with title=editing_str subtitle=video.title icon="media" usage_object=video %}
 
     <div class="row row-flush nice-padding">
 
@@ -70,8 +70,6 @@
 			{% endif %}
         </div>
         <div class="col2 ">
-            <img src='{{video.thumbnail.url}}' />
-
             <dl>
                 <dt>{% trans "Filesize" %}</dt>
                 <dd>{% if filesize %}{{ filesize|filesizeformat }}{% else %}{% trans "File not found" %}{% endif %}</dd>

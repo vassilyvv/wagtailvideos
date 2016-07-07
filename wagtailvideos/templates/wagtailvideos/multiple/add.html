@@ -48,7 +48,6 @@
         <li class="row">
             <div class="left col3">
                 <div class="preview">
-                    <div class="thumb icon icon-image"></div>
                     <div class="progress">
                         <div class="bar" style="width: 0%;"></div>
                     </div>
@@ -68,13 +67,9 @@
     {{ block.super }}
 
     <!-- this exact order of plugins is vital -->
-    <script src="{% static 'wagtailvideos/js/vendor/load-image.min.js' %}"></script>
-    <script src="{% static 'wagtailvideos/js/vendor/canvas-to-blob.min.js' %}"></script>
     <script src="{% static 'wagtailadmin/js/vendor/jquery.iframe-transport.js' %}"></script>
     <script src="{% static 'wagtailadmin/js/vendor/jquery.fileupload.js' %}"></script>
     <script src="{% static 'wagtailadmin/js/vendor/jquery.fileupload-process.js' %}"></script>
-    <script src="{% static 'wagtailvideos/js/vendor/jquery.fileupload-image.js' %}"></script>
-    <script src="{% static 'wagtailvideos/js/vendor/jquery.fileupload-validate.js' %}"></script>
     <script src="{% static 'wagtailadmin/js/vendor/tag-it.js' %}"></script>
 
     <!-- Main script -->

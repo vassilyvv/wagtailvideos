@@ -1,5 +1,7 @@
 {% load i18n %}
-
+<div data-video-thumb="{{ video.id }}" class='thumb icon icon-image hasthumb'>
+	<img src="{{ video.thumbnail.url }}" />
+</div>
 <form action="{% url 'wagtailvideos:edit_multiple' video.id %}" method="POST" enctype="multipart/form-data">
     <ul class="fields">
         {% csrf_token %}
@@ -16,3 +18,7 @@
         </li>
     </ul>
 </form>
+<script>
+	var thumb = $("[data-video-thumb=\"" + {{ video.id }} + "\"]");
+	$(".preview").append(thumb);
+</script>

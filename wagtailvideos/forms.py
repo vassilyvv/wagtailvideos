@@ -66,23 +66,6 @@ class VideoInsertionForm(forms.Form):
     pass
 
 
-class URLGeneratorForm(forms.Form):
-    filter_method = forms.ChoiceField(
-        label=_("Filter"),
-        choices=(
-            ('original', _("Original size")),
-            ('width', _("Resize to width")),
-            ('height', _("Resize to height")),
-            ('min', _("Resize to min")),
-            ('max', _("Resize to max")),
-            ('fill', _("Resize to fill")),
-        ),
-    )
-    width = forms.IntegerField(_("Width"), min_value=0)
-    height = forms.IntegerField(_("Height"), min_value=0)
-    closeness = forms.IntegerField(_("Closeness"), min_value=0, initial=0)
-
-
 GroupImagePermissionFormSet = collection_member_permission_formset_factory(
     Video,
     [

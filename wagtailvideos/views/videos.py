@@ -12,8 +12,7 @@ from wagtail.wagtailadmin.utils import PermissionPolicyChecker
 from wagtail.wagtailcore.models import Collection, Site
 from wagtail.wagtailsearch.backends import get_search_backends
 
-from wagtailvideos.forms import (URLGeneratorForm, VideoTranscodeAdminForm,
-                                 get_video_form)
+from wagtailvideos.forms import VideoTranscodeAdminForm, get_video_form
 from wagtailvideos.models import Video
 from wagtailvideos.permissions import permission_policy
 
@@ -79,12 +78,12 @@ def edit(request, video_id):
         form = VideoForm(request.POST, request.FILES, instance=video)
         if form.is_valid():
             if 'file' in form.changed_data:
-                # if providing a new image file, delete the old one and all renditions.
+                # if providing a new video file, delete the old one and all renditions.
                 # NB Doing this via original_file.delete() clears the file field,
                 # which definitely isn't what we want...
                 original_file.storage.delete(original_file.name)
 
-                # Set new image file size
+                # Set new video file size
                 video.file_size = video.file.size
 
             video = form.save()

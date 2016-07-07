@@ -21,7 +21,6 @@ def register_admin_urls():
 @hooks.register('insert_editor_js')
 def editor_js():
     js_files = [
-        static('wagtailvideos/js/hallo-plugins/hallo-wagtailvideo.js'),
         static('wagtailvideos/js/video-chooser.js'),
     ]
     js_includes = format_html_join(
@@ -32,7 +31,6 @@ def editor_js():
         """
         <script>
             window.chooserUrls.videoChooser = '{0}';
-            registerHalloPlugin('hallowagtailvideo');
         </script>
         """,
         urlresolvers.reverse('wagtailvideos:chooser')

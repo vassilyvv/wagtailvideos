@@ -51,7 +51,7 @@ class AbstractVideo(CollectionMember, TagSearchable):
     title = models.CharField(max_length=255, verbose_name=_('title'))
     file = models.FileField(
         verbose_name=_('file'), upload_to=get_upload_to)
-    thumbnail = models.ImageField()
+    thumbnail = models.ImageField(upload_to=get_upload_to)
     created_at = models.DateTimeField(verbose_name=_('created at'), auto_now_add=True, db_index=True)
     uploaded_by_user = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name=_('uploaded by user'),
@@ -116,16 +116,23 @@ class AbstractVideo(CollectionMember, TagSearchable):
         return self.title
 
     def get_thumbnail(self):
-        file_path = self.file.path
+        if self.thumbnail:
+            return self.thumbnail
+
+        file_path = os.path.join(
+            self.file.field.storage.base_location,
+            self.get_upload_to(self.filename()))
+
+        print(file_path)
         try:
             output_dir = tempfile.mkdtemp()
-            output_file = os.path.join(output_dir, 'thumbnail.jpg')
+            output_file = os.path.join(output_dir, self.filename(include_ext=False) + '_thumb.jpg')
             try:
                 FNULL = open(os.devnull, 'r')
                 subprocess.check_call([
                     'ffmpeg',
-                    '-itsoffset',
-                    '-4',
+                    '-hide_banner',
+                    '-itsoffset', '-4',
                     '-i', file_path,
                     '-vcodec', 'mjpeg',
                     '-vframes', '1',
