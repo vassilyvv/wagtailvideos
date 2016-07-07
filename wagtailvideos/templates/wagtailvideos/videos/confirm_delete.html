@@ -9,13 +9,13 @@
 
     <div class="row row-flush nice-padding">
         <div class="col6">
-            {% video video controls %}
+            {% video video controls style=max-width:100% %}
         </div>
         <div class="col6">
             <p>{% trans "Are you sure you want to delete this video?" %}</p>
             <form action="{% url 'wagtailvideos:delete' video.id %}" method="POST">
                 {% csrf_token %}
-                <input type="submit" value="{% trans 'Yes, delete' %}" class="serious" />
+                <input type="submit" class='button serious' value="{% trans 'Yes, delete' %}" />
             </form>
         </div>
     </div>

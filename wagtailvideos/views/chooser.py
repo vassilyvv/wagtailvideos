@@ -8,7 +8,7 @@ from wagtail.wagtailadmin.modal_workflow import render_modal_workflow
 from wagtail.wagtailcore.models import Collection
 from wagtail.wagtailsearch.backends import get_search_backends
 
-from wagtailvideos.forms import VideoInsertionForm, get_video_form
+from wagtailvideos.forms import get_video_form
 from wagtailvideos.models import Video
 
 
@@ -65,7 +65,6 @@ def chooser(request):
             'videos': videos,
             'is_searching': is_searching,
             'query_string': q,
-            'will_select_format': request.GET.get('select_format')
         })
     else:
         searchform = SearchForm()
@@ -82,7 +81,6 @@ def chooser(request):
         'searchform': searchform,
         'is_searching': False,
         'query_string': q,
-        'will_select_format': request.GET.get('select_format'),
         'popular_tags': Video.popular_tags(),
         'collections': collections,
     })
@@ -107,24 +105,21 @@ def chooser_upload(request):
         form = VideoForm(request.POST, request.FILES, instance=video)
 
         if form.is_valid():
-            form.save()
-
+            video.uploaded_by_user = request.user
+            video.file_size = video.file.size
+            video.save()
+            # Double save because the video file needs to *really* exists to generate thumbnail
+            video.thumbnail = video.get_thumbnail()
+            video.save(update_fields=['thumbnail'])
             # Reindex the video to make sure all tags are indexed
             for backend in get_search_backends():
                 backend.add(video)
 
-            if request.GET.get('select_format'):
-                form = VideoInsertionForm(initial={'alt_text': video.default_alt_text})
-                return render_modal_workflow(
-                    request, 'wagtailvideos/chooser/select_format.html', 'wagtailvideos/chooser/select_format.js',
-                    {'video': video, 'form': form}
-                )
-            else:
-                # not specifying a format; return the video details now
-                return render_modal_workflow(
-                    request, None, 'wagtailvideos/chooser/videos_chosen.js',
-                    {'video_json': get_video_json(video)}
-                )
+            print("RETURN!!!!")
+            return render_modal_workflow(
+                request, None, 'wagtailvideos/chooser/video_chosen.js',
+                {'video_json': get_video_json(video)}
+            )
     else:
         form = VideoForm()
 
@@ -133,39 +128,4 @@ def chooser_upload(request):
     return render_modal_workflow(
         request, 'wagtailvideos/chooser/chooser.html', 'wagtailvideos/chooser/chooser.js',
         {'videos': videos, 'uploadform': form, 'searchform': searchform}
-    )
-
-
-def chooser_select_format(request, video_id):
-    video = get_object_or_404(Video, id=video_id)
-
-    if request.POST:
-        form = VideoInsertionForm(request.POST, initial={'alt_text': video.default_alt_text})
-        if form.is_valid():
-
-            preview_video = video.get_rendition(format.filter_spec)
-
-            video_json = json.dumps({
-                'id': image.id,
-                'title': image.title,
-                'class': format.classnames,
-                'edit_link': reverse('wagtailvideos:edit', args=(video.id,)),
-                'preview': {
-                    'url': preview_image.url,
-                    'width': preview_image.width,
-                    'height': preview_image.height,
-                },
-                'html': format.image_to_editor_html(image, form.cleaned_data['alt_text']),
-            })
-
-            return render_modal_workflow(
-                request, None, 'wagtailimages/chooser/image_chosen.js',
-                {'image_json': image_json}
-            )
-    else:
-        form = ImageInsertionForm(initial={'alt_text': image.default_alt_text})
-
-    return render_modal_workflow(
-        request, 'wagtailimages/chooser/select_format.html', 'wagtailimages/chooser/select_format.js',
-        {'image': image, 'form': form}
     )

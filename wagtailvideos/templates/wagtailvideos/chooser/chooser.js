@@ -1,6 +1,6 @@
 {% load i18n %}
 function(modal) {
-    var searchUrl = $('form.image-search', modal.body).attr('action');
+    var searchUrl = $('form.video-search', modal.body).attr('action');
 
     /* currentTag stores the tag currently being filtered on, so that we can
     preserve this when paginating */
@@ -82,7 +82,7 @@ function(modal) {
         return false;
     });
 
-    $('form.image-search', modal.body).submit(search);
+    $('form.video-search', modal.body).submit(search);
 
     $('#id_q').on('input', function() {
         clearTimeout($.data(this, 'timer'));

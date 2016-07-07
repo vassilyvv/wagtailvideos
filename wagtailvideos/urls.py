@@ -18,5 +18,4 @@ urlpatterns = [
     url(r'^chooser/$', chooser.chooser, name='chooser'),
     url(r'^chooser/(\d+)/$', chooser.video_chosen, name='video_chosen'),
     url(r'^chooser/upload/$', chooser.chooser_upload, name='chooser_upload'),
-    url(r'^chooser/(\d+)/select_format/$', chooser.chooser_select_format, name='chooser_select_format'),
 ]

@@ -1,6 +1,6 @@
 function createVideoChooser(id) {
     var chooserElement = $('#' + id + '-chooser');
-    var previewVideo = chooserElement.find('.preview-video img');
+    var previewVideo = chooserElement.find('.video-thumb img');
     var input = $('#' + id);
     var editLink = chooserElement.find('.edit-link');
 
@@ -9,11 +9,10 @@ function createVideoChooser(id) {
             url: window.chooserUrls.videoChooser,
             responses: {
                 videoChosen: function(videoData) {
+					debugger;
                     input.val(videoData.id);
                     previewVideo.attr({
                         src: videoData.preview.url,
-                        width: videoData.preview.width,
-                        height: videoData.preview.height,
                         alt: videoData.title
                     });
                     chooserElement.removeClass('blank');

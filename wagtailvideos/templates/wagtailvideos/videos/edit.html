@@ -65,11 +65,7 @@
 			<form action="{% url 'wagtailvideos:create_transcode' video.id %}" method="POST">
 				<ul class="fields">
 					{% csrf_token %}
-					<li>
-						<div class='input'>
-							{{ transcode_form.media_format }}
-						</div>
-					</li>
+					{% include "wagtailadmin/shared/field_as_li.html" with field=transcode_form.media_format %}
 					<li>
 						<input class="button" type='submit' value="Start" />
 					</li>

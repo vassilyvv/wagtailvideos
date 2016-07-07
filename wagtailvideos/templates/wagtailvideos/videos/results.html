@@ -19,7 +19,9 @@
         {% for video in videos %}
             <li>
                 <a class="image-choice" href="{% url 'wagtailvideos:edit' video.id %}">
-                    {% include "wagtailvideos/videos/results_image.html" %}
+                    <div class="image">
+						<img src='{{video.thumbnail.url}}' height=165 width=165 class="show-transparency" /></img>
+					</div>
                     <h3>{{ video.title|ellipsistrim:60 }}</h3>
                 </a>
             </li>

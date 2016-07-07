@@ -30,9 +30,11 @@ In template
 How to transcode using ffmpeg
 //TODO
 
+
 Future features
 ===============
 
 - Richtext embed
 - Streamfield block
 - Transcoding via amazon service rather than ffmpeg
+- Wagtail homescreen video count

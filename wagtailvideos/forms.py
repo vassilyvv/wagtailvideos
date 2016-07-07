@@ -61,11 +61,6 @@ class VideoTranscodeAdminForm(forms.Form):
         self.video.do_transcode(media_format)
 
 
-
-class VideoInsertionForm(forms.Form):
-    pass
-
-
 GroupImagePermissionFormSet = collection_member_permission_formset_factory(
     Video,
     [

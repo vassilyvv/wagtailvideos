@@ -133,6 +133,7 @@ def create_transcode(request, video_id):
         transcode_form.save()
     return redirect('wagtailvideos:edit', video_id)
 
+
 @permission_checker.require('delete')
 def delete(request, video_id):
     video = get_object_or_404(Video, id=video_id)
