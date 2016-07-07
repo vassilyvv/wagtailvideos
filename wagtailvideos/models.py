@@ -51,7 +51,7 @@ class AbstractVideo(CollectionMember, TagSearchable):
     title = models.CharField(max_length=255, verbose_name=_('title'))
     file = models.FileField(
         verbose_name=_('file'), upload_to=get_upload_to)
-    thumbnail = models.ImageField(upload_to=get_upload_to)
+    thumbnail = models.ImageField(upload_to=get_upload_to, null=True, blank=True)
     created_at = models.DateTimeField(verbose_name=_('created at'), auto_now_add=True, db_index=True)
     uploaded_by_user = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name=_('uploaded by user'),
@@ -89,7 +89,6 @@ class AbstractVideo(CollectionMember, TagSearchable):
     def get_upload_to(self, filename):
         folder_name = 'original_videos'
         filename = self.file.field.storage.get_valid_name(filename)
-
         # do a unidecode in the filename and then
         # replace non-ascii characters in filename with _ , to sidestep issues with filesystem encoding
         filename = "".join((i if ord(i) < 128 else '_') for i in unidecode(filename))
@@ -123,7 +122,8 @@ class AbstractVideo(CollectionMember, TagSearchable):
             self.file.field.storage.base_location,
             self.get_upload_to(self.filename()))
 
-        print(file_path)
+        
+
         try:
             output_dir = tempfile.mkdtemp()
             output_file = os.path.join(output_dir, self.filename(include_ext=False) + '_thumb.jpg')
@@ -147,7 +147,6 @@ class AbstractVideo(CollectionMember, TagSearchable):
             shutil.rmtree(output_dir, ignore_errors=True)
 
     def save(self, **kwargs):
-        self.thumbnail = self.get_thumbnail()
         super(AbstractVideo, self).save(**kwargs)
 
     @property
@@ -264,6 +263,7 @@ class TranscodingThread(threading.Thread):
 # Delete files when model is deleted
 @receiver(pre_delete, sender=Video)
 def video_delete(sender, instance, **kwargs):
+    instance.thumbnail.delete(False)
     instance.file.delete(False)
 
 

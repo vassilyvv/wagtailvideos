@@ -61,6 +61,9 @@ def add(request):
             video.uploaded_by_user = request.user
             video.file_size = video.file.size
             video.save()
+            # Double save because the video file needs to *really* exists to generate thumbnail
+            video.thumbnail = video.get_thumbnail()
+            video.save(update_fields=['thumbnail'])
 
             # Success! Send back an edit form
             return JsonResponse({
