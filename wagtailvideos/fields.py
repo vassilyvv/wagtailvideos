@@ -6,9 +6,6 @@ from django.forms.fields import FileField
 from django.template.defaultfilters import filesizeformat
 from django.utils.translation import ugettext_lazy as _
 
-ALLOWED_EXTENSIONS = ['mov', 'mp4']
-SUPPORTED_FORMATS_TEXT = _("MOV, MP4")
-
 
 class WagtailVideoField(FileField):
     def __init__(self, *args, **kwargs):
@@ -21,25 +18,14 @@ class WagtailVideoField(FileField):
         # Help text
         if self.max_upload_size is not None:
             self.help_text = _(
-                "Supported formats: %(supported_formats)s. Maximum filesize: %(max_upload_size)s."
+                "Maximum filesize: %(max_upload_size)s."
             ) % {
-                'supported_formats': SUPPORTED_FORMATS_TEXT,
                 'max_upload_size': max_upload_size_text,
-            }
-        else:
-            self.help_text = _(
-                "Supported formats: %(supported_formats)s."
-            ) % {
-                'supported_formats': SUPPORTED_FORMATS_TEXT,
             }
 
         # Error messages
-        self.error_messages['invalid_image'] = _(
-            "Not a supported image format. Supported formats: %s."
-        ) % SUPPORTED_FORMATS_TEXT
-
-        self.error_messages['invalid_video_known_format'] = _(
-            "Not a valid %s video."
+        self.error_messages['invalid_video_format'] = _(
+            "Not a valid video."
         )
 
         self.error_messages['file_too_large'] = _(
@@ -51,23 +37,8 @@ class WagtailVideoField(FileField):
         ) % max_upload_size_text
 
     def check_video_file_format(self, f):
-        # Check file extension
-        extension = os.path.splitext(f.name)[1].lower()[1:]
-
-        if extension not in ALLOWED_EXTENSIONS:
-            raise ValidationError(self.error_messages['invalid_video'], code='invalid_video')
-
-        if hasattr(f, 'video'):
-            # Django 1.8 annotates the file object with the PIL image
-            pass
-        elif not f.closed:
-            # Open image file
-            file_position = f.tell()
-            f.seek(0)
-            f.seek(file_position)
-        else:
-            # Couldn't get the PIL image, skip checking the internal file format
-            return
+        if not f.content_type.startswith('video'):
+            raise ValidationError(self.error_messages['invalid_video_format'])
 
     def check_video_file_size(self, f):
         # Upload size checking can be disabled by setting max upload size to None

@@ -7,7 +7,6 @@ from django.views.decorators.vary import vary_on_headers
 from wagtail.wagtailadmin.utils import PermissionPolicyChecker
 from wagtail.wagtailsearch.backends import get_search_backends
 
-from wagtailvideos.fields import ALLOWED_EXTENSIONS
 from wagtailvideos.forms import get_video_form
 from wagtailvideos.models import Video
 from wagtailvideos.permissions import permission_policy
@@ -76,7 +75,6 @@ def add(request):
                 }, request=request),
             })
         else:
-            print(form.errors)
             # Validation error
             return JsonResponse({
                 'success': False,
@@ -90,11 +88,9 @@ def add(request):
     return render(request, 'wagtailvideos/multiple/add.html', {
         'max_filesize': form.fields['file'].max_upload_size,
         'help_text': form.fields['file'].help_text,
-        'allowed_extensions': ALLOWED_EXTENSIONS,
         'error_max_file_size': form.fields['file'].error_messages['file_too_large_unknown_size'],
-        'error_accepted_file_types': form.fields['file'].error_messages['invalid_image'],
+        'error_accepted_file_types': form.fields['file'].error_messages['invalid_video_format'],
         'collections': collections_to_choose,
-
     })
 
 
