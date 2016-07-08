@@ -37,12 +37,6 @@ $(function() {
                 data.context.find('.left').each(function(index, elm) {
                     $(elm).append(escapeHtml(data.files[index].name));
                 });
-
-                data.context.find('.preview .thumb').each(function(index, elm) {
-                    debugger;
-                    $(elm).addClass('hasthumb');
-                });
-
             }).done(function() {
                 data.context.find('.start').prop('disabled', false);
                 if ((that._trigger('added', e, data) !== false) &&
@@ -99,7 +93,7 @@ $(function() {
 
             if (response.success) {
                 itemElement.addClass('upload-success')
-
+                $('.preview', itemElement).attr('data-thumb-target', response.video_id);
                 $('.right', itemElement).append(response.form);
             } else {
                 itemElement.addClass('upload-failure');

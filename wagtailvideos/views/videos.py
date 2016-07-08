@@ -147,36 +147,37 @@ def delete(request, video_id):
         'video': video,
     })
 
+
 @permission_checker.require('add')
 def add(request):
-    # FIXME try and find where this is used
-    print("\n\n----------------------------ADD HIT---------------------------\n\n")
-    ImageModel = Video
-    ImageForm = get_video_form(ImageModel)
+    VideoForm = get_video_form(Video)
 
     if request.POST:
-        image = ImageModel(uploaded_by_user=request.user)
-        form = ImageForm(request.POST, request.FILES, instance=image, user=request.user)
+        video = Video(uploaded_by_user=request.user)
+        form = VideoForm(request.POST, request.FILES, instance=video, user=request.user)
         if form.is_valid():
-            # Set image file size
-            image.file_size = image.file.size
+            # Save
+            video = form.save(commit=False)
+            video.file_size = video.file.size
+            video.save()
+            # Double save because the video file needs to *really* exists to generate thumbnail
+            video.thumbnail = video.get_thumbnail()
+            video.save(update_fields=['thumbnail'])
 
-            form.save()
-
-            # Reindex the image to make sure all tags are indexed
+            # Success! Send back an edit form
             for backend in get_search_backends():
-                backend.add(image)
+                backend.add(video)
 
-            messages.success(request, _("Image '{0}' added.").format(image.title), buttons=[
-                messages.button(reverse('wagtailvideos:edit', args=(image.id,)), _('Edit'))
+            messages.success(request, _("Video '{0}' added.").format(video.title), buttons=[
+                messages.button(reverse('wagtailvideos:edit', args=(video.id,)), _('Edit'))
             ])
             return redirect('wagtailvideos:index')
         else:
-            messages.error(request, _("The image could not be created due to errors."))
+            messages.error(request, _("The video could not be created due to errors."))
     else:
-        form = ImageForm(user=request.user)
+        form = VideoForm(user=request.user)
 
-    return render(request, "wagtailvideos/images/add.html", {
+    return render(request, "wagtailvideos/videos/add.html", {
         'form': form,
     })
 

@@ -61,11 +61,11 @@ class VideoTranscodeAdminForm(forms.Form):
         self.video.do_transcode(media_format)
 
 
-GroupImagePermissionFormSet = collection_member_permission_formset_factory(
+GroupVideoPermissionFormSet = collection_member_permission_formset_factory(
     Video,
     [
-        ('add_image', _("Add"), _("Add/edit images you own")),
-        ('change_image', _("Edit"), _("Edit any image")),
+        ('add_video', _("Add"), _("Add/edit images you own")),
+        ('change_video', _("Edit"), _("Edit any video")),
     ],
-    'wagtailimages/permissions/includes/image_permissions_formset.html'
+    'wagtailvideos/permissions/includes/video_permissions_formset.html'
 )

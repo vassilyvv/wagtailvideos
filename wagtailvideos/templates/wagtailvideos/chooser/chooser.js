@@ -56,9 +56,8 @@ function(modal) {
 
     ajaxifyLinks(modal.body);
 
-    $('form.image-upload', modal.body).submit(function() {
+    $('form.video-upload', modal.body).submit(function() {
         var formdata = new FormData(this);
-
         $.ajax({
             url: this.action,
             data: formdata,

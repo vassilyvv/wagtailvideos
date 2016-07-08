@@ -96,6 +96,7 @@ def video_chosen(request, video_id):
 
 
 def chooser_upload(request):
+    print("chooser_upload hit!!!")
     VideoForm = get_video_form(Video)
 
     searchform = SearchForm()

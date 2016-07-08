@@ -1,7 +1,4 @@
 {% load i18n %}
-<div data-video-thumb="{{ video.id }}" class='thumb icon icon-image hasthumb'>
-	<img src="{{ video.thumbnail.url }}" />
-</div>
 <form action="{% url 'wagtailvideos:edit_multiple' video.id %}" method="POST" enctype="multipart/form-data">
     <ul class="fields">
         {% csrf_token %}
@@ -13,12 +10,16 @@
             {% endif %}
         {% endfor %}
         <li>
-            <input type="submit" value="{% trans 'Update' %}" />
+            <input class='button' type="submit" value="{% trans 'Update' %}" />
             <a href="{% url 'wagtailvideos:delete_multiple' video.id %}" class="delete button button-secondary no">{% trans "Delete" %}</a>
         </li>
     </ul>
 </form>
+<div data-video-thumb="{{ video.id }}" class='thumb icon icon-image hasthumb'>
+	<img src="{{ video.thumbnail.url }}" />
+</div>
 <script>
+
 	var thumb = $("[data-video-thumb=\"" + {{ video.id }} + "\"]");
-	$(".preview").append(thumb);
+	$("[data-thumb-target=\"" + {{ video.id }} + "\"]").append(thumb);
 </script>

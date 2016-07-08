@@ -9,7 +9,6 @@ function createVideoChooser(id) {
             url: window.chooserUrls.videoChooser,
             responses: {
                 videoChosen: function(videoData) {
-					debugger;
                     input.val(videoData.id);
                     previewVideo.attr({
                         src: videoData.preview.url,
