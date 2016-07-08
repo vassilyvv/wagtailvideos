@@ -2,6 +2,11 @@
 {% load staticfiles i18n wagtailvideos_tags %}
 {% block titletag %}{% blocktrans with title=video.title %}Editing video {{ title }}{% endblocktrans %}{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'wagtailvideos/css/edit-video.css' %}" type="text/css" />
+
+{% endblock %}
+
 {% block extra_js %}
     {{ block.super }}
 
@@ -26,7 +31,6 @@
                 {% csrf_token %}
                 <ul class="fields">
                     {% for field in form %}
-
                         {% if field.name == 'file' %}
                             {% include "wagtailvideos/videos/_file_field_as_li.html" %}
                         {% elif field.is_hidden %}
@@ -34,7 +38,6 @@
                         {% else %}
                             {% include "wagtailadmin/shared/field_as_li.html" %}
                         {% endif %}
-
                     {% endfor %}
                     <li>
                         <input type="submit" class="button" value="{% trans 'Save' %}" />
@@ -56,12 +59,18 @@
 			{% for transcode in transcodes %}
 				<li>
 					{{ transcode.media_format }}
-					{% if transcode.processing %} (Processing... hold tight) {% endif %}
-					{% if transcode.error_message %} <pre> {{ transcode.error_message }}</pre> {% endif %}
+					{% if transcode.processing %} <span class='processing'>(Processing... hold tight) </span>{% endif %}
+					{% if transcode.error_message %}
+					<span class='transcode-error'>ERROR:</span>
+					<div class='transcode-error'>
+						<pre> {{ transcode.error_message }}</pre>
+					</div>
+					{% endif %}
 				</li>
 			{% endfor %}
 			</ul>
 			{% endif %}
+			<h3 class="label">Create transcode</h3>
 			<form action="{% url 'wagtailvideos:create_transcode' video.id %}" method="POST">
 				<ul class="fields">
 					{% csrf_token %}

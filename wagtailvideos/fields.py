@@ -25,7 +25,7 @@ class WagtailVideoField(FileField):
 
         # Error messages
         self.error_messages['invalid_video_format'] = _(
-            "Not a valid video."
+            "Not a valid video. Content type was %s."
         )
 
         self.error_messages['file_too_large'] = _(
@@ -38,7 +38,7 @@ class WagtailVideoField(FileField):
 
     def check_video_file_format(self, f):
         if not f.content_type.startswith('video'):
-            raise ValidationError(self.error_messages['invalid_video_format'])
+            raise ValidationError(self.error_messages['invalid_video_format'] % f.content_type)
 
     def check_video_file_size(self, f):
         # Upload size checking can be disabled by setting max upload size to None

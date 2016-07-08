@@ -6,11 +6,9 @@ import shutil
 import subprocess
 import tempfile
 import threading
-from tempfile import NamedTemporaryFile
 
 import django
 from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
 from django.core.files.base import ContentFile
 from django.core.urlresolvers import reverse
 from django.db import models
@@ -18,8 +16,6 @@ from django.db.models.signals import pre_delete
 from django.dispatch.dispatcher import receiver
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
-from enum import Enum
-from PIL import Image
 from taggit.managers import TaggableManager
 from unidecode import unidecode
 from wagtail.wagtailadmin.taggable import TagSearchable
@@ -122,7 +118,7 @@ class AbstractVideo(CollectionMember, TagSearchable):
             self.file.field.storage.base_location,
             self.get_upload_to(self.filename()))
 
-        
+
 
         try:
             output_dir = tempfile.mkdtemp()
@@ -188,7 +184,8 @@ class AbstractVideo(CollectionMember, TagSearchable):
 
         if transcode.processing is False:
             transcode.processing = True
-            transcode.save(update_fields=['processing']) # Lock the transcode model
+            transcode.error_messages = ''
+            transcode.save(update_fields=['processing', 'error_message']) # Lock the transcode model
             TranscodingThread(transcode).start()
         else:
             pass  # TODO Queue?
@@ -205,7 +202,7 @@ class Video(AbstractVideo):
         'tags',
     )
 
-# TODO move out to utils.py or somewhere appropriate
+
 class TranscodingThread(threading.Thread):
     def __init__(self, transcode, **kwargs):
         super().__init__(**kwargs)
@@ -233,7 +230,7 @@ class TranscodingThread(threading.Thread):
                     output_file,
                 ], stdin=FNULL, stderr=subprocess.STDOUT)
             elif media_format is MediaFormats.mp4:
-                subprocess.check_call(args + [
+                subprocess.check_output(args + [
                     '-codec:v', 'libx264',
                     '-preset', 'slow', # TODO Checkout other presets
                     '-crf', '22',
@@ -241,7 +238,7 @@ class TranscodingThread(threading.Thread):
                     output_file,
                 ], stdin=FNULL, stderr=subprocess.STDOUT)
             elif media_format is MediaFormats.webm:
-                subprocess.check_call(args + [
+                subprocess.check_output(args + [
                     '-codec:v', 'libvpx',
                     '-crf', '10',
                     '-b:v', '1M',
