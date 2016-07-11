@@ -1,5 +1,6 @@
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse
+from django.template.defaultfilters import filesizeformat
 from django.test import TestCase, override_settings
 from wagtail.tests.utils import WagtailTestUtils
 from wagtail.wagtailcore.models import Collection
@@ -109,6 +110,49 @@ class TestVidoAddView(TestCase, WagtailTestUtils):
 
         # The form should have an error
         self.assertFormError(response, 'form', 'file', "This field is required.")
+
+    @override_settings(WAGTAILVIDEOS_MAX_UPLOAD_SIZE=1)
+    def test_add_too_large_file(self):
+        video_file = create_test_video_file()
+
+        response = self.post({
+            'title': "Test image",
+            'file': SimpleUploadedFile('small.mp4', video_file.read(), "video/mp4"),
+        })
+
+        # Shouldn't redirect anywhere
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'wagtailvideos/videos/add.html')
+
+        # The form should have an error
+        self.assertFormError(
+            response, 'form', 'file',
+            "This file is too big ({file_size}). Maximum filesize {max_file_size}.".format(
+                file_size=filesizeformat(video_file.size),
+                max_file_size=filesizeformat(1),
+            )
+        )
+
+    def test_add_with_collections(self):
+        root_collection = Collection.get_first_root_node()
+        evil_plans_collection = root_collection.add_child(name="Evil plans")
+
+        response = self.post({
+            'title': "Test video",
+            'file': SimpleUploadedFile('small.mp4', create_test_video_file().read(), "video/mp4"),
+            'collection': evil_plans_collection.id,
+        })
+
+        # Should redirect back to index
+        self.assertRedirects(response, reverse('wagtailvideos:index'))
+
+        # Check that the image was created
+        videos = Video.objects.filter(title="Test video")
+        self.assertEqual(videos.count(), 1)
+
+        # Test that it was placed in the Evil Plans collection
+        video = videos.first()
+        self.assertEqual(video.collection, evil_plans_collection)
 
 
 class TestVideoEditView(TestCase, WagtailTestUtils):
