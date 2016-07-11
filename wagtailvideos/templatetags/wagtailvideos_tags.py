@@ -37,6 +37,9 @@ class VideoNode(template.Node):
     def render(self, context):
         video = self.video.resolve(context)
 
+        if not video:
+            raise template.TemplateSyntaxError("video tag requires a Video object as the first parameter")
+
         sources = ["<source src='{0}' type='video/{1}'>"
                          .format(video.url, video.file_ext)]  # TODO get mimetype properly (extension is not always reliable)
 

@@ -117,7 +117,7 @@ class AbstractVideo(CollectionMember, TagSearchable):
 
         file_path = self.file.path
         try:
-            show_format = subprocess.check_output(['ffprobe', '-i', file_path, '-show_format'])
+            show_format = subprocess.check_output(['ffprobe', '-i', file_path, '-show_format', '-v', 'quiet'])
             show_format = show_format.decode("utf-8")
             # show_format comes out in key=value pairs seperated by newlines
             duration = re.findall(r'([duration^=]+)=([^=]+)(?:\n|$)', show_format)[0][1]
@@ -141,7 +141,7 @@ class AbstractVideo(CollectionMember, TagSearchable):
                 FNULL = open(os.devnull, 'r')
                 subprocess.check_call([
                     'ffmpeg',
-                    '-hide_banner',
+                    '-v', 'quiet',
                     '-itsoffset', '-4',
                     '-i', file_path,
                     '-vcodec', 'mjpeg',
