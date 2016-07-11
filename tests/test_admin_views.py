@@ -1,6 +1,6 @@
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from wagtail.tests.utils import WagtailTestUtils
 from wagtail.wagtailcore.models import Collection
 
@@ -109,3 +109,75 @@ class TestVidoAddView(TestCase, WagtailTestUtils):
 
         # The form should have an error
         self.assertFormError(response, 'form', 'file', "This field is required.")
+
+
+class TestVideoEditView(TestCase, WagtailTestUtils):
+    def setUp(self):
+        self.login()
+
+        self.video = Video.objects.create(
+            title="Test video",
+            file=create_test_video_file(),
+        )
+
+    def get(self, params={}):
+        return self.client.get(reverse('wagtailvideos:edit', args=(self.video.id,)), params)
+
+    def post(self, post_data={}):
+        return self.client.post(reverse('wagtailvideos:edit', args=(self.video.id,)), post_data)
+
+    def test_simple(self):
+        response = self.get()
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'wagtailvideos/videos/edit.html')
+
+        # Ensure the form supports file uploads
+        self.assertContains(response, 'enctype="multipart/form-data"')
+
+    @override_settings(WAGTAIL_USAGE_COUNT_ENABLED=True)
+    def test_with_usage_count(self):
+        response = self.get()
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'wagtailvideos/videos/edit.html')
+        self.assertContains(response, "Used 0 times")
+        expected_url = '/admin/videos/usage/%d/' % self.video.id
+        self.assertContains(response, expected_url)
+
+    def test_edit(self):
+        response = self.post({
+            'title': "Edited",
+        })
+
+        # Should redirect back to index
+        self.assertRedirects(response, reverse('wagtailvideos:index'))
+
+        # Check that the image was edited
+        video = Video.objects.get(id=self.video.id)
+        self.assertEqual(video.title, "Edited")
+
+    def test_edit_with_new_video_file(self):
+        # Change the file size of the video
+        self.video.file_size = 100000
+        self.video.save()
+
+        new_file = create_test_video_file()
+        response = self.post({
+            'title': "Edited",
+            'file': SimpleUploadedFile('new.mp4', new_file.read(), "video/mp4"),
+        })
+
+        # Should redirect back to index
+        self.assertRedirects(response, reverse('wagtailvideos:index'))
+
+        # Check that the image file size changed (assume it changed to the correct value)
+        video = Video.objects.get(id=self.video.id)
+        self.assertNotEqual(video.file_size, 100000)
+
+
+    def test_with_missing_video_file(self):
+        self.video.file.delete(False)
+
+        response = self.get()
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'wagtailvideos/videos/edit.html')
+        self.assertContains(response, 'The source video file could not be found')
