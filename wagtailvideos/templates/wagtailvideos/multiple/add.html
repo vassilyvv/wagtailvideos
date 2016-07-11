@@ -1,5 +1,5 @@
 {% extends "wagtailadmin/base.html" %}
-{% load wagtailimages_tags i18n staticfiles %}
+{% load i18n staticfiles %}
 {% block titletag %}{% trans "Add multiple videos" %}{% endblock %}
 {% block extra_css %}
     {{ block.super }}
@@ -24,9 +24,9 @@
                 {% csrf_token %}
                 {% if collections %}
                     <div class="field">
-                        <label for="id_addimage_collection">{% trans "Add to collection:" %}</label>
+                        <label for="id_addvideo_collection">{% trans "Add to collection:" %}</label>
                         <div class="field-content">
-                            <select id="id_addimage_collection" name="collection">
+                            <select id="id_addvideo_collection" name="collection">
                                 {% for collection in collections %}
                                     <option value="{{ collection.id }}">{{ collection.name }}</option>
                                 {% endfor %}

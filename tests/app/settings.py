@@ -1,5 +1,4 @@
 import os
-import sys
 
 INSTALLED_APPS = [
     'wagtailvideos',
@@ -13,6 +12,7 @@ INSTALLED_APPS = [
     'wagtail.wagtailusers',
     'wagtail.wagtailsites',
     'wagtail.wagtailsnippets',
+    'wagtail.wagtailimages',
 
     'django.contrib.admin',
     'django.contrib.auth',
@@ -73,3 +73,4 @@ STATIC_ROOT = os.path.join(os.path.dirname(__file__), 'static')
 STATIC_URL = '/static/'
 
 MEDIA_ROOT = os.path.join(os.path.dirname(__file__), 'media')
+MEDIA_URL = '/media/'

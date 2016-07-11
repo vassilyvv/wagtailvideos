@@ -17,6 +17,7 @@ from django.db.models.signals import post_save, pre_delete
 from django.dispatch.dispatcher import receiver
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
+from enumchoicefield import ChoiceEnum, EnumChoiceField
 from taggit.managers import TaggableManager
 from unidecode import unidecode
 from wagtail.wagtailadmin.taggable import TagSearchable
@@ -24,8 +25,6 @@ from wagtail.wagtailadmin.utils import get_object_usage
 from wagtail.wagtailcore.models import CollectionMember
 from wagtail.wagtailsearch import index
 from wagtail.wagtailsearch.queryset import SearchableQuerySetMixin
-
-from enumchoicefield import ChoiceEnum, EnumChoiceField
 
 
 class MediaFormats(ChoiceEnum):
@@ -133,10 +132,11 @@ class AbstractVideo(CollectionMember, TagSearchable):
             return self.thumbnail
 
         file_path = self.file.path
+        file_name = self.filename(include_ext=False) + '_thumb.jpg'
 
         try:
             output_dir = tempfile.mkdtemp()
-            output_file = os.path.join(output_dir, self.filename(include_ext=False) + '_thumb.jpg')
+            output_file = os.path.join(output_dir, file_name)
             try:
                 FNULL = open(os.devnull, 'r')
                 subprocess.check_call([
@@ -152,7 +152,7 @@ class AbstractVideo(CollectionMember, TagSearchable):
                 ], stdin=FNULL)
             except subprocess.CalledProcessError:
                 return None
-            return ContentFile(open(output_file, 'rb').read(), 'thumb.jpg')
+            return ContentFile(open(output_file, 'rb').read(), file_name)
         finally:
             shutil.rmtree(output_dir, ignore_errors=True)
 
@@ -174,7 +174,7 @@ class AbstractVideo(CollectionMember, TagSearchable):
         return os.path.splitext(self.filename())[1][1:]
 
     def is_editable_by_user(self, user):
-        from wagtail.wagtailimages.permissions import permission_policy
+        from wagtailvideos.permissions import permission_policy
         return permission_policy.user_has_permission_for_instance(user, 'change', self)
 
     @classmethod
