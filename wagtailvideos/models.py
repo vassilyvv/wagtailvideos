@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import os
 import os.path
+import re
 import shutil
 import subprocess
 import tempfile
@@ -12,7 +13,7 @@ from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.urlresolvers import reverse
 from django.db import models
-from django.db.models.signals import pre_delete
+from django.db.models.signals import post_save, pre_delete
 from django.dispatch.dispatcher import receiver
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
@@ -49,6 +50,7 @@ class AbstractVideo(CollectionMember, TagSearchable):
         verbose_name=_('file'), upload_to=get_upload_to)
     thumbnail = models.ImageField(upload_to=get_upload_to, null=True, blank=True)
     created_at = models.DateTimeField(verbose_name=_('created at'), auto_now_add=True, db_index=True)
+    duration = models.CharField(max_length=255, blank=True)
     uploaded_by_user = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name=_('uploaded by user'),
         null=True, blank=True, editable=False, on_delete=models.SET_NULL
@@ -110,15 +112,27 @@ class AbstractVideo(CollectionMember, TagSearchable):
     def __str__(self):
         return self.title
 
+    def get_duration(self):
+        if self.duration:
+            return self.duration
+
+        file_path = self.file.path
+        try:
+            show_format = subprocess.check_output(['ffprobe', '-i', file_path, '-show_format'])
+            show_format = show_format.decode("utf-8")
+            # show_format comes out in key=value pairs seperated by newlines
+            duration = re.findall(r'([duration^=]+)=([^=]+)(?:\n|$)', show_format)[0][1]
+            hours, remainder = divmod(float(duration), 3600)
+            minutes, seconds = divmod(remainder, 60)
+            return "%d:%02d:%02d" % (hours, minutes, seconds)
+        except subprocess.CalledProcessError:
+            return ''
+
     def get_thumbnail(self):
         if self.thumbnail:
             return self.thumbnail
 
-        file_path = os.path.join(
-            self.file.field.storage.base_location,
-            self.get_upload_to(self.filename()))
-
-
+        file_path = self.file.path
 
         try:
             output_dir = tempfile.mkdtemp()
@@ -263,6 +277,17 @@ def video_delete(sender, instance, **kwargs):
     instance.thumbnail.delete(False)
     instance.file.delete(False)
 
+# Fields that need the actual video file to create
+@receiver(post_save, sender=Video)
+def video_saved(sender, instance, **kwargs):
+    if hasattr(instance, '_from_signal'):
+        return
+    instance.thumbnail = instance.get_thumbnail()
+    instance.duration = instance.get_duration()
+    instance.file_size = instance.file.size
+    instance._from_signal = True
+    instance.save()
+    del instance._from_signal
 
 class AbstractVideoTranscode(models.Model):
     media_format = EnumChoiceField(MediaFormats)

@@ -87,7 +87,6 @@ def edit(request, video_id):
                 video.file_size = video.file.size
 
             video = form.save()
-            video.thumbnail = video.get_thumbnail()
             video.save()
 
             # Reindex the image to make sure all tags are indexed
@@ -160,9 +159,6 @@ def add(request):
             video = form.save(commit=False)
             video.file_size = video.file.size
             video.save()
-            # Double save because the video file needs to *really* exists to generate thumbnail
-            video.thumbnail = video.get_thumbnail()
-            video.save(update_fields=['thumbnail'])
 
             # Success! Send back an edit form
             for backend in get_search_backends():

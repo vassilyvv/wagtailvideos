@@ -107,16 +107,11 @@ def chooser_upload(request):
 
         if form.is_valid():
             video.uploaded_by_user = request.user
-            video.file_size = video.file.size
             video.save()
-            # Double save because the video file needs to *really* exists to generate thumbnail
-            video.thumbnail = video.get_thumbnail()
-            video.save(update_fields=['thumbnail'])
             # Reindex the video to make sure all tags are indexed
             for backend in get_search_backends():
                 backend.add(video)
-
-            print("RETURN!!!!")
+                
             return render_modal_workflow(
                 request, None, 'wagtailvideos/chooser/video_chosen.js',
                 {'video_json': get_video_json(video)}
