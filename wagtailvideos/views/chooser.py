@@ -95,7 +95,6 @@ def video_chosen(request, video_id):
 
 
 def chooser_upload(request):
-    print("chooser_upload hit!!!")
     VideoForm = get_video_form(Video)
 
     searchform = SearchForm()
@@ -110,7 +109,7 @@ def chooser_upload(request):
             # Reindex the video to make sure all tags are indexed
             for backend in get_search_backends():
                 backend.add(video)
-                
+
             return render_modal_workflow(
                 request, None, 'wagtailvideos/chooser/video_chosen.js',
                 {'video_json': get_video_json(video)}
@@ -119,6 +118,7 @@ def chooser_upload(request):
         form = VideoForm()
 
     videos = Video.objects.order_by('title')
+    paginator, videos = paginate(request, videos, per_page=12)
 
     return render_modal_workflow(
         request, 'wagtailvideos/chooser/chooser.html', 'wagtailvideos/chooser/chooser.js',
