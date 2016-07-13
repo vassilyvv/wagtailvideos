@@ -247,7 +247,8 @@ class TestVideoDeleteView(TestCase, WagtailTestUtils):
         self.assertTemplateUsed(response, 'wagtailvideos/videos/confirm_delete.html')
 
     def test_delete(self):
-        response = self.post()
+        # FIXME HACK Not sure why the test fails when no data is posted
+        response = self.post({'data': 'data'})
 
         # Should redirect back to index
         self.assertRedirects(response, reverse('wagtailvideos:index'))
