@@ -112,9 +112,9 @@ def chooser_upload(request):
         if form.is_valid():
             video.uploaded_by_user = request.user
             video.save()
+
             # Reindex the video to make sure all tags are indexed
-            for backend in get_search_backends():
-                backend.add(video)
+            search_index.insert_or_update_object(video)
 
             return render_modal_workflow(
                 request, None, 'wagtailvideos/chooser/video_chosen.js',
