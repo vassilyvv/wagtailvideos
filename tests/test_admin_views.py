@@ -1,10 +1,14 @@
+import json
+
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group, Permission
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse
 from django.template.defaultfilters import filesizeformat
 from django.test import TestCase, override_settings
 from tests.utils import create_test_video_file
 from wagtail.tests.utils import WagtailTestUtils
-from wagtail.wagtailcore.models import Collection
+from wagtail.wagtailcore.models import Collection, GroupCollectionPermission
 from wagtailvideos.models import Video
 
 
@@ -84,7 +88,7 @@ class TestVideoAddView(TestCase, WagtailTestUtils):
         # Should redirect back to index
         self.assertRedirects(response, reverse('wagtailvideos:index'))
 
-        # Check that the image was created
+        # Check that the video was created
         videos = Video.objects.filter(title=title)
         self.assertEqual(videos.count(), 1)
 
@@ -115,7 +119,7 @@ class TestVideoAddView(TestCase, WagtailTestUtils):
         video_file = create_test_video_file()
 
         response = self.post({
-            'title': "Test image",
+            'title': "Test video",
             'file': SimpleUploadedFile('small.mp4', video_file.read(), "video/mp4"),
         })
 
@@ -145,7 +149,7 @@ class TestVideoAddView(TestCase, WagtailTestUtils):
         # Should redirect back to index
         self.assertRedirects(response, reverse('wagtailvideos:index'))
 
-        # Check that the image was created
+        # Check that the video was created
         videos = Video.objects.filter(title="Test video")
         self.assertEqual(videos.count(), 1)
 
@@ -194,7 +198,7 @@ class TestVideoEditView(TestCase, WagtailTestUtils):
         # Should redirect back to index
         self.assertRedirects(response, reverse('wagtailvideos:index'))
 
-        # Check that the image was edited
+        # Check that the video was edited
         video = Video.objects.get(id=self.video.id)
         self.assertEqual(video.title, "Edited")
 
@@ -212,7 +216,7 @@ class TestVideoEditView(TestCase, WagtailTestUtils):
         # Should redirect back to index
         self.assertRedirects(response, reverse('wagtailvideos:index'))
 
-        # Check that the image file size changed (assume it changed to the correct value)
+        # Check that the video file size changed (assume it changed to the correct value)
         video = Video.objects.get(id=self.video.id)
         self.assertNotEqual(video.file_size, 100000)
 
@@ -229,7 +233,7 @@ class TestVideoDeleteView(TestCase, WagtailTestUtils):
     def setUp(self):
         self.login()
 
-        # Create an image to edit
+        # Create an video to edit
         self.video = Video.objects.create(
             title="Test video",
             file=create_test_video_file(),
@@ -253,7 +257,7 @@ class TestVideoDeleteView(TestCase, WagtailTestUtils):
         # Should redirect back to index
         self.assertRedirects(response, reverse('wagtailvideos:index'))
 
-        # Check that the image was deleted
+        # Check that the video was deleted
         videos = Video.objects.filter(title="Test video")
         self.assertEqual(videos.count(), 0)
 
@@ -294,10 +298,10 @@ class TestVideoChooserView(TestCase, WagtailTestUtils):
         response = self.get({'tag': "even"})
         self.assertEqual(response.status_code, 200)
 
-        # Results should include images tagged 'even'
+        # Results should include videos tagged 'even'
         self.assertContains(response, "Test video 2 is even better")
 
-        # Results should not include images that just have 'even' in the title
+        # Results should not include videos that just have 'even' in the title
         self.assertNotContains(response, "Test video 3 is even better")
 
 
@@ -305,7 +309,7 @@ class TestVideoChooserChosenView(TestCase, WagtailTestUtils):
     def setUp(self):
         self.login()
 
-        # Create an image to edit
+        # Create an video to edit
         self.video = Video.objects.create(
             title="Test video",
             file=create_test_video_file(),
@@ -342,7 +346,7 @@ class TestVideoChooserUploadView(TestCase, WagtailTestUtils):
         # Check response
         self.assertEqual(response.status_code, 200)
 
-        # Check that the image was created
+        # Check that the video was created
         videos = Video.objects.filter(title="Test video")
         self.assertEqual(videos.count(), 1)
 
@@ -372,19 +376,263 @@ class TestVideoChooserUploadView(TestCase, WagtailTestUtils):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'wagtailvideos/chooser/chooser.html')
 
-        # The re-rendered image chooser listing should be paginated
+        # The re-rendered video chooser listing should be paginated
         self.assertContains(response, "Page 1 of ")
         self.assertEqual(12, len(response.context['videos']))
 
-    @override_settings(DEFAULT_FILE_STORAGE='wagtail.tests.dummy_external_storage.DummyExternalStorage')
-    def test_upload_with_external_storage(self):
-        response = self.client.post(reverse('wagtailvideos:chooser_upload'), {
-            'title': "Test video",
-            'file': SimpleUploadedFile('small.mp4', create_test_video_file().read(), "video/mp4"),
-        })
+
+class TestVideoChooserUploadViewWithLimitedPermissions(TestCase, WagtailTestUtils):
+    def setUp(self):
+        add_video_permission = Permission.objects.get(
+            content_type__app_label='wagtailvideos', codename='add_video'
+        )
+        admin_permission = Permission.objects.get(
+            content_type__app_label='wagtailadmin', codename='access_admin'
+        )
+
+        root_collection = Collection.get_first_root_node()
+        self.evil_plans_collection = root_collection.add_child(name="Evil plans")
+
+        conspirators_group = Group.objects.create(name="Evil conspirators")
+        conspirators_group.permissions.add(admin_permission)
+        GroupCollectionPermission.objects.create(
+            group=conspirators_group,
+            collection=self.evil_plans_collection,
+            permission=add_video_permission
+        )
+
+        user = get_user_model().objects.create_user(
+            username='moriarty',
+            email='moriarty@example.com',
+            password='password'
+        )
+        user.groups.add(conspirators_group)
+
+        self.client.login(username='moriarty', password='password')
+
+    def test_get(self):
+        response = self.client.get(reverse('wagtailvideos:chooser_upload'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'wagtailvideos/chooser/chooser.html')
+
+        # user only has access to one collection, so no 'Collection' option
+        # is displayed on the form
+        self.assertNotContains(response, '<label for="id_collection">')
+
+    def test_get_chooser(self):
+        response = self.client.get(reverse('wagtailvideos:chooser'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'wagtailvideos/chooser/chooser.html')
+
+        # user only has access to one collection, so no 'Collection' option
+        # is displayed on the form
+        self.assertNotContains(response, '<label for="id_collection">')
+
+
+class TestMultipleVideoUploader(TestCase, WagtailTestUtils):
+    """
+    This tests the multiple video upload views located in wagtailvideos/views/multiple.py
+    """
+    def setUp(self):
+        self.login()
+
+        # Create an video for running tests on
+        self.video = Video.objects.create(
+            title="Test video",
+            file=create_test_video_file(),
+        )
+
+    def test_add(self):
+        """
+        This tests that the add view responds correctly on a GET request
+        """
+        # Send request
+        response = self.client.get(reverse('wagtailvideos:add_multiple'))
 
         # Check response
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'wagtailvideos/multiple/add.html')
 
-        # Check that the image was created
-        self.assertTrue(Video.objects.filter(title="Test video").exists())
+    def test_add_post(self):
+        """
+        This tests that a POST request to the add view saves the video and returns an edit form
+        """
+        response = self.client.post(reverse('wagtailvideos:add_multiple'), {
+            'files[]': SimpleUploadedFile('small.mp4', create_test_video_file().read(), "video/mp4"),
+        }, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        # Check response
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertTemplateUsed(response, 'wagtailvideos/multiple/edit_form.html')
+
+        # Check video
+        self.assertIn('video', response.context)
+        self.assertEqual(response.context['video'].title, 'small.mp4')
+        self.assertTrue(response.context['video'].file_size)
+
+        # Check form
+        self.assertIn('form', response.context)
+        self.assertEqual(response.context['form'].initial['title'], 'small.mp4')
+
+        # Check JSON
+        response_json = json.loads(response.content.decode())
+        self.assertIn('video_id', response_json)
+        self.assertIn('form', response_json)
+        self.assertIn('success', response_json)
+        self.assertEqual(response_json['video_id'], response.context['video'].id)
+        self.assertTrue(response_json['success'])
+
+    def test_add_post_noajax(self):
+        """
+        This tests that only AJAX requests are allowed to POST to the add view
+        """
+        response = self.client.post(reverse('wagtailvideos:add_multiple'), {})
+
+        # Check response
+        self.assertEqual(response.status_code, 400)
+
+    def test_add_post_nofile(self):
+        """
+        This tests that the add view checks for a file when a user POSTs to it
+        """
+        response = self.client.post(reverse('wagtailvideos:add_multiple'), {}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        # Check response
+        self.assertEqual(response.status_code, 400)
+
+    def test_add_post_badfile(self):
+        """
+        This tests that the add view checks for a file when a user POSTs to it
+        """
+        response = self.client.post(reverse('wagtailvideos:add_multiple'), {
+            'files[]': SimpleUploadedFile('small.mp4', b"This is not an video!"),
+        }, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        # Check response
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/json')
+
+        # Check JSON
+        response_json = json.loads(response.content.decode())
+        self.assertNotIn('video_id', response_json)
+        self.assertNotIn('form', response_json)
+        self.assertIn('success', response_json)
+        self.assertIn('error_message', response_json)
+        self.assertFalse(response_json['success'])
+        self.assertIn("Not a valid video.", response_json['error_message'])
+
+    def test_edit_get(self):
+        """
+        This tests that a GET request to the edit view returns a 405 "METHOD NOT ALLOWED" response
+        """
+        # Send request
+        response = self.client.get(reverse('wagtailvideos:edit_multiple', args=(self.video.id, )))
+
+        # Check response
+        self.assertEqual(response.status_code, 405)
+
+    def test_edit_post(self):
+        """
+        This tests that a POST request to the edit view edits the video
+        """
+        # Send request
+        response = self.client.post(reverse('wagtailvideos:edit_multiple', args=(self.video.id, )), {
+            ('video-%d-title' % self.video.id): "New title!",
+            ('video-%d-tags' % self.video.id): "",
+        }, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        # Check response
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/json')
+
+        # Check JSON
+        response_json = json.loads(response.content.decode())
+        self.assertIn('video_id', response_json)
+        self.assertNotIn('form', response_json)
+        self.assertIn('success', response_json)
+        self.assertEqual(response_json['video_id'], self.video.id)
+        self.assertTrue(response_json['success'])
+
+    def test_edit_post_noajax(self):
+        """
+        This tests that a POST request to the edit view without AJAX returns a 400 response
+        """
+        # Send request
+        response = self.client.post(reverse('wagtailvideos:edit_multiple', args=(self.video.id, )), {
+            ('video-%d-title' % self.video.id): "New title!",
+            ('video-%d-tags' % self.video.id): "",
+        })
+
+        # Check response
+        self.assertEqual(response.status_code, 400)
+
+    def test_edit_post_validation_error(self):
+        """
+        This tests that a POST request to the edit page returns a json document with "success=False"
+        and a form with the validation error indicated
+        """
+        # Send request
+        response = self.client.post(reverse('wagtailvideos:edit_multiple', args=(self.video.id, )), {
+            ('video-%d-title' % self.video.id): "",  # Required
+            ('video-%d-tags' % self.video.id): "",
+        }, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        # Check response
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertTemplateUsed(response, 'wagtailvideos/multiple/edit_form.html')
+
+        # Check that a form error was raised
+        self.assertFormError(response, 'form', 'title', "This field is required.")
+
+        # Check JSON
+        response_json = json.loads(response.content.decode())
+        self.assertIn('video_id', response_json)
+        self.assertIn('form', response_json)
+        self.assertIn('success', response_json)
+        self.assertEqual(response_json['video_id'], self.video.id)
+        self.assertFalse(response_json['success'])
+
+    def test_delete_get(self):
+        """
+        This tests that a GET request to the delete view returns a 405 "METHOD NOT ALLOWED" response
+        """
+        # Send request
+        response = self.client.get(reverse('wagtailvideos:delete_multiple', args=(self.video.id, )))
+
+        # Check response
+        self.assertEqual(response.status_code, 405)
+
+    def test_delete_post(self):
+        """
+        This tests that a POST request to the delete view deletes the video
+        """
+        # Send request
+        response = self.client.post(reverse(
+            'wagtailvideos:delete_multiple', args=(self.video.id, )
+        ), HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        # Check response
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/json')
+
+        # Make sure the video is deleted
+        self.assertFalse(Video.objects.filter(id=self.video.id).exists())
+
+        # Check JSON
+        response_json = json.loads(response.content.decode())
+        self.assertIn('video_id', response_json)
+        self.assertIn('success', response_json)
+        self.assertEqual(response_json['video_id'], self.video.id)
+        self.assertTrue(response_json['success'])
+
+    def test_delete_post_noajax(self):
+        """
+        This tests that a POST request to the delete view without AJAX returns a 400 response
+        """
+        # Send request
+        response = self.client.post(reverse('wagtailvideos:delete_multiple', args=(self.video.id, )))
+
+        # Check response
+        self.assertEqual(response.status_code, 400)
