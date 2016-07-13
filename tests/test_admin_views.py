@@ -40,7 +40,7 @@ class TestVideoIndexView(TestCase, WagtailTestUtils):
             self.assertEqual(response.status_code, 200)
 
 
-class TestVidoAddView(TestCase, WagtailTestUtils):
+class TestVideoAddView(TestCase, WagtailTestUtils):
     def setUp(self):
         self.login()
 
