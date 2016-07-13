@@ -5,10 +5,15 @@ from django.shortcuts import get_object_or_404, render
 from wagtail.utils.pagination import paginate
 from wagtail.wagtailadmin.forms import SearchForm
 from wagtail.wagtailadmin.modal_workflow import render_modal_workflow
+from wagtail.wagtailadmin.utils import PermissionPolicyChecker
 from wagtail.wagtailcore.models import Collection
+from wagtail.wagtailsearch import index as search_index
 from wagtail.wagtailsearch.backends import get_search_backends
 from wagtailvideos.forms import get_video_form
 from wagtailvideos.models import Video
+from wagtailvideos.permissions import permission_policy
+
+permission_checker = PermissionPolicyChecker(permission_policy)
 
 
 def get_video_json(video):
@@ -94,6 +99,7 @@ def video_chosen(request, video_id):
     )
 
 
+@permission_checker.require('add')
 def chooser_upload(request):
     VideoForm = get_video_form(Video)
 
