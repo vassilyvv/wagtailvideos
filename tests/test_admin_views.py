@@ -217,7 +217,6 @@ class TestVideoEditView(TestCase, WagtailTestUtils):
         video = Video.objects.get(id=self.video.id)
         self.assertNotEqual(video.file_size, 100000)
 
-
     def test_with_missing_video_file(self):
         self.video.file.delete(False)
 
@@ -225,3 +224,35 @@ class TestVideoEditView(TestCase, WagtailTestUtils):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'wagtailvideos/videos/edit.html')
         self.assertContains(response, 'The source video file could not be found')
+
+
+class TestVideoDeleteView(TestCase, WagtailTestUtils):
+    def setUp(self):
+        self.login()
+
+        # Create an image to edit
+        self.video = Video.objects.create(
+            title="Test video",
+            file=create_test_video_file(),
+        )
+
+    def get(self, params={}):
+        return self.client.get(reverse('wagtailvideos:delete', args=(self.video.id,)), params)
+
+    def post(self, post_data={}):
+        return self.client.post(reverse('wagtailvideos:delete', args=(self.video.id,)), post_data)
+
+    def test_simple(self):
+        response = self.get()
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'wagtailvideos/videos/confirm_delete.html')
+
+    def test_delete(self):
+        response = self.post()
+
+        # Should redirect back to index
+        self.assertRedirects(response, reverse('wagtailvideos:index'))
+
+        # Check that the image was deleted
+        videos = Video.objects.filter(title="Test video")
+        self.assertEqual(videos.count(), 0)
