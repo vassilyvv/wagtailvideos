@@ -256,3 +256,135 @@ class TestVideoDeleteView(TestCase, WagtailTestUtils):
         # Check that the image was deleted
         videos = Video.objects.filter(title="Test video")
         self.assertEqual(videos.count(), 0)
+
+
+class TestVideoChooserView(TestCase, WagtailTestUtils):
+    def setUp(self):
+        self.login()
+
+    def get(self, params={}):
+        return self.client.get(reverse('wagtailvideos:chooser'), params)
+
+    def test_simple(self):
+        response = self.get()
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'wagtailvideos/chooser/chooser.html')
+        self.assertTemplateUsed(response, 'wagtailvideos/chooser/chooser.js')
+
+    def test_search(self):
+        response = self.get({'q': "Hello"})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['query_string'], "Hello")
+
+    def test_pagination(self):
+        pages = ['0', '1', '-1', '9999', 'Not a page']
+        for page in pages:
+            response = self.get({'p': page})
+            self.assertEqual(response.status_code, 200)
+
+    def test_filter_by_tag(self):
+        for i in range(0, 10):
+            video = Video.objects.create(
+                title="Test video %d is even better than the last one" % i,
+                file=create_test_video_file(),
+            )
+            if i % 2 == 0:
+                video.tags.add('even')
+
+        response = self.get({'tag': "even"})
+        self.assertEqual(response.status_code, 200)
+
+        # Results should include images tagged 'even'
+        self.assertContains(response, "Test video 2 is even better")
+
+        # Results should not include images that just have 'even' in the title
+        self.assertNotContains(response, "Test video 3 is even better")
+
+
+class TestVideoChooserChosenView(TestCase, WagtailTestUtils):
+    def setUp(self):
+        self.login()
+
+        # Create an image to edit
+        self.video = Video.objects.create(
+            title="Test video",
+            file=create_test_video_file(),
+        )
+
+    def get(self, params={}):
+        return self.client.get(reverse('wagtailvideos:video_chosen', args=(self.video.id,)), params)
+
+    def test_simple(self):
+        response = self.get()
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'wagtailvideos/chooser/video_chosen.js')
+
+
+class TestVideoChooserUploadView(TestCase, WagtailTestUtils):
+    def setUp(self):
+        self.login()
+
+    def get(self, params={}):
+        return self.client.get(reverse('wagtailvideos:chooser_upload'), params)
+
+    def test_simple(self):
+        response = self.get()
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'wagtailvideos/chooser/chooser.html')
+        self.assertTemplateUsed(response, 'wagtailvideos/chooser/chooser.js')
+
+    def test_upload(self):
+        response = self.client.post(reverse('wagtailvideos:chooser_upload'), {
+            'title': "Test video",
+            'file': SimpleUploadedFile('small.mp4', create_test_video_file().read(), "video/mp4"),
+        })
+
+        # Check response
+        self.assertEqual(response.status_code, 200)
+
+        # Check that the image was created
+        videos = Video.objects.filter(title="Test video")
+        self.assertEqual(videos.count(), 1)
+
+    def test_upload_no_file_selected(self):
+        response = self.client.post(reverse('wagtailvideos:chooser_upload'), {
+            'title': "Test video",
+        })
+
+        # Shouldn't redirect anywhere
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'wagtailvideos/chooser/chooser.html')
+
+        # The form should have an error
+        self.assertFormError(response, 'uploadform', 'file', "This field is required.")
+
+    def test_pagination_after_upload_form_error(self):
+        for i in range(0, 20):
+            Video.objects.create(
+                title="Test video %d" % i,
+                file=create_test_video_file(),
+            )
+
+        response = self.client.post(reverse('wagtailvideos:chooser_upload'), {
+            'title': "Test video",
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'wagtailvideos/chooser/chooser.html')
+
+        # The re-rendered image chooser listing should be paginated
+        self.assertContains(response, "Page 1 of ")
+        self.assertEqual(12, len(response.context['videos']))
+
+    @override_settings(DEFAULT_FILE_STORAGE='wagtail.tests.dummy_external_storage.DummyExternalStorage')
+    def test_upload_with_external_storage(self):
+        response = self.client.post(reverse('wagtailvideos:chooser_upload'), {
+            'title': "Test video",
+            'file': SimpleUploadedFile('small.mp4', create_test_video_file().read(), "video/mp4"),
+        })
+
+        # Check response
+        self.assertEqual(response.status_code, 200)
+
+        # Check that the image was created
+        self.assertTrue(Video.objects.filter(title="Test video").exists())
