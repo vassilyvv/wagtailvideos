@@ -2,10 +2,9 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse
 from django.template.defaultfilters import filesizeformat
 from django.test import TestCase, override_settings
+from tests.utils import create_test_video_file
 from wagtail.tests.utils import WagtailTestUtils
 from wagtail.wagtailcore.models import Collection
-
-from tests.utils import create_test_video_file
 from wagtailvideos.models import Video
 
 

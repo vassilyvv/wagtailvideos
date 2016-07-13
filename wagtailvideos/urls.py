@@ -1,5 +1,4 @@
 from django.conf.urls import url
-
 from wagtailvideos.views import chooser, multiple, videos
 
 urlpatterns = [

@@ -7,7 +7,6 @@ from wagtail.wagtailadmin.forms import SearchForm
 from wagtail.wagtailadmin.modal_workflow import render_modal_workflow
 from wagtail.wagtailcore.models import Collection
 from wagtail.wagtailsearch.backends import get_search_backends
-
 from wagtailvideos.forms import get_video_form
 from wagtailvideos.models import Video
 

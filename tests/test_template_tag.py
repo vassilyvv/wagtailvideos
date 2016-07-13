@@ -1,6 +1,5 @@
 from django.template import Context, Template, TemplateSyntaxError
 from django.test import TestCase
-
 from tests.utils import create_test_video_file
 from wagtailvideos.models import Video
 

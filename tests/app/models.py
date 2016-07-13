@@ -1,6 +1,5 @@
 from django.db import models
 from wagtail.wagtailcore.models import Page
-
 from wagtailvideos.edit_handlers import VideoChooserPanel
 
 
