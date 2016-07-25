@@ -51,8 +51,8 @@ def get_video_form(model):
 class VideoTranscodeAdminForm(forms.Form):
     media_format = EnumField(MediaFormats)
 
-    def __init__(self, data=None, video, **kwargs):
-        super().__init__(data, **kwargs)
+    def __init__(self, **kwargs, video, data=None):
+        super().__init__(**kwargs, data=None)
         self.video = video
 
     def save(self):
