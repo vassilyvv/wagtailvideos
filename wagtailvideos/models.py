@@ -104,7 +104,7 @@ class AbstractVideo(CollectionMember, TagSearchable):
     def usage_url(self):
         return reverse('wagtailvideos:video_usage', args=(self.id,))
 
-    search_fields = TagSearchable.search_fields + CollectionMember.search_fields + [
+    search_fields = list(TagSearchable.search_fields) + list(CollectionMember.search_fields) + [
         index.FilterField('uploaded_by_user'),
     ]
 
