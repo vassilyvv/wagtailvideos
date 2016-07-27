@@ -4,3 +4,4 @@ dist/
 ./settings.py
 venv/
 tests.sqlite3
+.tox

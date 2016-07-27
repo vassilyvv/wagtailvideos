@@ -9,6 +9,7 @@ from wagtail.wagtailadmin.utils import PermissionPolicyChecker
 from wagtail.wagtailcore.models import Collection
 from wagtail.wagtailsearch import index as search_index
 from wagtail.wagtailsearch.backends import get_search_backends
+
 from wagtailvideos.forms import get_video_form
 from wagtailvideos.models import Video
 from wagtailvideos.permissions import permission_policy
@@ -114,7 +115,12 @@ def chooser_upload(request):
             video.save()
 
             # Reindex the video to make sure all tags are indexed
-            search_index.insert_or_update_object(video)
+            from wagtail.wagtailcore import __version__
+            if __version__.startswith("1.4"):
+                for backend in get_search_backends():
+                    backend.add(video)
+            else:
+                search_index.insert_or_update_object(video)
 
             return render_modal_workflow(
                 request, None, 'wagtailvideos/chooser/video_chosen.js',
