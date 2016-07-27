@@ -16,9 +16,12 @@ env:
     - DJANGO='18' WAGTAIL='15'
     - DJANGO='19' WAGTAIL='15'
 
+before_install:
+    - sudo add-apt-repository ppa:mc3man/trusty-media -y
+    - sudo apt-get update -q
+    - sudo apt-get install ffmpeg -y
 
 install:
-  - ./tests/scripts/install-ffmpeg.sh
   - pip install --upgrade pip wheel tox
 
 cache:
