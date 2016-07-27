@@ -17,8 +17,8 @@ env:
     - DJANGO='19' WAGTAIL='15'
 
 before_install:
-    - sudo add-apt-repository ppa:mc3man/trusty-media -y
-    - sudo apt-get update -q
+    # - sudo add-apt-repository ppa:mc3man/trusty-media -y // Inlcudes all multimedia options but 404s currently :(
+    - sudo apt-get update -qq
     - sudo apt-get install ffmpeg -y
 
 install:
