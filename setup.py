@@ -3,14 +3,14 @@
 Install wagtailvideos using setuptools
 """
 
-with open('README.md', 'r') as f:
+with open('README.rst', 'r') as f:
     readme = f.read()
 
 from setuptools import find_packages, setup
 
 setup(
     name='wagtailvideos',
-    version='0.1.5',
+    version='0.1.6',
     description="A wagtail module for uploading and displaying videos in various codecs.",
     long_description=readme,
     author='Takeflight',
