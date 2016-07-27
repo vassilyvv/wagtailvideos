@@ -12,9 +12,13 @@ env:
     - TOX_ENV=
   matrix:
     - DJANGO='18'
+      WAGTAIL='14'
     - DJANGO='19'
-    - WAGTAIL='14'
-    - WAGTAIL='15'
+      WAGTAIL='14'
+    - DJANGO='18'
+      WAGTAIL='15'
+    - DJANGO='19'
+      WAGTAIL='15'
 
 
 install:
