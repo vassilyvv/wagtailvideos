@@ -1,5 +1,8 @@
+from __future__ import absolute_import, print_function, unicode_literals
+
 from django.apps import AppConfig
 from django.core.checks import Error, register
+
 from wagtailvideos.utils import which
 
 

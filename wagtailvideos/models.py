@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import os.path
@@ -17,7 +17,6 @@ from django.db.models.signals import post_save, pre_delete
 from django.dispatch.dispatcher import receiver
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
-from enumchoicefield import ChoiceEnum, EnumChoiceField
 from taggit.managers import TaggableManager
 from unidecode import unidecode
 from wagtail.wagtailadmin.taggable import TagSearchable
@@ -25,6 +24,8 @@ from wagtail.wagtailadmin.utils import get_object_usage
 from wagtail.wagtailcore.models import CollectionMember
 from wagtail.wagtailsearch import index
 from wagtail.wagtailsearch.queryset import SearchableQuerySetMixin
+
+from enumchoicefield import ChoiceEnum, EnumChoiceField
 
 
 class MediaFormats(ChoiceEnum):
@@ -86,9 +87,6 @@ class AbstractVideo(CollectionMember, TagSearchable):
     def get_upload_to(self, filename):
         folder_name = 'original_videos'
         filename = self.file.field.storage.get_valid_name(filename)
-        # do a unidecode in the filename and then
-        # replace non-ascii characters in filename with _ , to sidestep issues with filesystem encoding
-        filename = "".join((i if ord(i) < 128 else '_') for i in unidecode(filename))
 
         # Truncate filename so it fits in the 100 character limit
         # https://code.djangoproject.com/ticket/9893

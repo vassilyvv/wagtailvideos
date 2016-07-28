@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 from django.conf.urls import include, url
 from django.contrib.staticfiles.templatetags.staticfiles import static
@@ -7,6 +7,7 @@ from django.utils.html import format_html, format_html_join
 from django.utils.translation import ugettext_lazy as _
 from wagtail.wagtailadmin.menu import MenuItem
 from wagtail.wagtailcore import hooks
+
 from wagtailvideos.forms import GroupVideoPermissionFormSet
 
 from . import urls
