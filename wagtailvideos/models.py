@@ -1,5 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
+import datetime
+import logging
 import os
 import os.path
 import re
@@ -27,6 +29,8 @@ from wagtail.wagtailsearch.queryset import SearchableQuerySetMixin
 
 from enumchoicefield import ChoiceEnum, EnumChoiceField
 
+logger = logging.getLogger(__name__)
+
 
 class MediaFormats(ChoiceEnum):
     webm = 'VP8 and Vorbis in WebM'
@@ -50,7 +54,7 @@ class AbstractVideo(CollectionMember, TagSearchable):
         verbose_name=_('file'), upload_to=get_upload_to)
     thumbnail = models.ImageField(upload_to=get_upload_to, null=True, blank=True)
     created_at = models.DateTimeField(verbose_name=_('created at'), auto_now_add=True, db_index=True)
-    duration = models.CharField(max_length=255, blank=True)
+    duration = models.DurationField(blank=True, null=True)
     uploaded_by_user = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name=_('uploaded by user'),
         null=True, blank=True, editable=False, on_delete=models.SET_NULL
@@ -115,15 +119,14 @@ class AbstractVideo(CollectionMember, TagSearchable):
 
         file_path = self.file.path
         try:
-            show_format = subprocess.check_output(['ffprobe', '-i', file_path, '-show_format'])
+            show_format = subprocess.check_output(['ffprobe', file_path, '-show_format', '-v', 'quiet'])
             show_format = show_format.decode("utf-8")
             # show_format comes out in key=value pairs seperated by newlines
             duration = re.findall(r'([duration^=]+)=([^=]+)(?:\n|$)', show_format)[0][1]
-            hours, remainder = divmod(float(duration), 3600)
-            minutes, seconds = divmod(remainder, 60)
-            return "%d:%02d:%02d" % (hours, minutes, seconds)
+            return datetime.timedelta(seconds=float(duration))
         except subprocess.CalledProcessError:
-            return ''
+            logger.exception("Getting video duration failed")
+            return None
 
     def get_thumbnail(self):
         if self.thumbnail:
