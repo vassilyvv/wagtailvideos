@@ -2,3 +2,4 @@ include LICENSE
 include README.rst
 
 recursive-include wagtailvideos/templates *
+recursive-include wagtailvideos/static *
