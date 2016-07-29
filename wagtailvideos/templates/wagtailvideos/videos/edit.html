@@ -88,7 +88,7 @@
                 <dt>{% trans "Filesize" %}</dt>
                 <dd>{% if filesize %}{{ filesize|filesizeformat }}{% else %}{% trans "File not found" %}{% endif %}</dd>
                 <dt>{% trans "Duration" %}</dt>
-                <dd>{{ video.duration }}</dd>
+                <dd>{{ video.formatted_duration }}</dd>
             </dl>
         </div>
     </div>

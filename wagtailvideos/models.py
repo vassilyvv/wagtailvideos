@@ -19,6 +19,7 @@ from django.db.models.signals import post_save, pre_delete
 from django.dispatch.dispatcher import receiver
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
+from enumchoicefield import ChoiceEnum, EnumChoiceField
 from taggit.managers import TaggableManager
 from unidecode import unidecode
 from wagtail.wagtailadmin.taggable import TagSearchable
@@ -26,8 +27,6 @@ from wagtail.wagtailadmin.utils import get_object_usage
 from wagtail.wagtailcore.models import CollectionMember
 from wagtail.wagtailsearch import index
 from wagtail.wagtailsearch.queryset import SearchableQuerySetMixin
-
-from enumchoicefield import ChoiceEnum, EnumChoiceField
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +64,10 @@ class AbstractVideo(CollectionMember, TagSearchable):
     file_size = models.PositiveIntegerField(null=True, editable=False)
 
     objects = VideoQuerySet.as_manager()
+
+    search_fields = list(TagSearchable.search_fields) + list(CollectionMember.search_fields) + [
+        index.FilterField('uploaded_by_user'),
+    ]
 
     def is_stored_locally(self):
         """
@@ -106,9 +109,13 @@ class AbstractVideo(CollectionMember, TagSearchable):
     def usage_url(self):
         return reverse('wagtailvideos:video_usage', args=(self.id,))
 
-    search_fields = list(TagSearchable.search_fields) + list(CollectionMember.search_fields) + [
-        index.FilterField('uploaded_by_user'),
-    ]
+    @property
+    def formatted_duration(self):
+        if(self.duration):
+            hours, remainder = divmod(self.duration.seconds, 3600)
+            minutes, seconds = divmod(remainder, 60)
+            return "%d:%02d:%02d" % (hours, minutes, seconds)
+        return ''
 
     def __str__(self):
         return self.title
@@ -119,6 +126,7 @@ class AbstractVideo(CollectionMember, TagSearchable):
 
         file_path = self.file.path
         try:
+            # FIXME prints out extra stuff on travis, pip stderr to dev/null
             show_format = subprocess.check_output(['ffprobe', file_path, '-show_format', '-v', 'quiet'])
             show_format = show_format.decode("utf-8")
             # show_format comes out in key=value pairs seperated by newlines
