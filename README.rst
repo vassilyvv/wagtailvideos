@@ -14,7 +14,12 @@ Requirements
 Installing
 ----------
 
-**This package is not on PyPI yet**
+Install using pypi
+
+.. code:: bash
+
+    pip install wagtailvideos
+
 
 Using
 -----
