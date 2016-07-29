@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import json
 
 from django.contrib.auth import get_user_model
@@ -6,13 +8,14 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse
 from django.template.defaultfilters import filesizeformat
 from django.test import TestCase, override_settings
-from tests.utils import create_test_video_file
 from wagtail.tests.utils import WagtailTestUtils
 from wagtail.wagtailcore.models import Collection, GroupCollectionPermission
+
+from tests.utils import create_test_video_file
 from wagtailvideos.models import Video
 
 
-class TestVideoIndexView(TestCase, WagtailTestUtils):
+class TestVideoIndexView(WagtailTestUtils, TestCase):
     def setUp(self):
         self.login()
 

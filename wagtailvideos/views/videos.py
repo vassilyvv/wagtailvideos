@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function, unicode_literals
+
 import os
 
 from django.core.urlresolvers import NoReverseMatch, reverse
@@ -11,6 +13,7 @@ from wagtail.wagtailadmin.forms import SearchForm
 from wagtail.wagtailadmin.utils import PermissionPolicyChecker
 from wagtail.wagtailcore.models import Collection, Site
 from wagtail.wagtailsearch.backends import get_search_backends
+
 from wagtailvideos.forms import VideoTranscodeAdminForm, get_video_form
 from wagtailvideos.models import Video
 from wagtailvideos.permissions import permission_policy
@@ -125,7 +128,7 @@ def create_transcode(request, video_id):
         return HttpResponseNotAllowed(['POST'])
 
     video = get_object_or_404(Video, id=video_id)
-    transcode_form = VideoTranscodeAdminForm(request.POST, video=video)
+    transcode_form = VideoTranscodeAdminForm(data=request.POST, video=video)
 
     if transcode_form.is_valid():
         transcode_form.save()
