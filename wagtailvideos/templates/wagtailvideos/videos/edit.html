@@ -52,13 +52,13 @@
             <h2 class="label">{% trans "Video preview" %}</h2>
 			{% video video controls style=max-width:100% %}
 			<h3 class="label">Transcodes</h3>
-			<p>If you wish to generate HTML5 compliant transcodes use the form below. This may take a while dependung in the length of the video.</p>
+			<p>If you wish to generate HTML5 compliant transcodes use the form below. This may take a while depending in the length of the video.</p>
 			{% if transcodes %}
 			<h3 class="label">Available Transcodes</h3>
 			<ul>
 			{% for transcode in transcodes %}
 				<li>
-					{{ transcode.media_format }}
+					{{ transcode.media_format }} ({{ transcode.quality }} quality)
 					{% if transcode.processing %} <span class='processing'>(Processing... hold tight) </span>{% endif %}
 					{% if transcode.error_message %}
 					<span class='transcode-error'>ERROR:</span>
@@ -75,6 +75,7 @@
 				<ul class="fields">
 					{% csrf_token %}
 					{% include "wagtailadmin/shared/field_as_li.html" with field=transcode_form.media_format %}
+                    {% include "wagtailadmin/shared/field_as_li.html" with field=transcode_form.quality %}
 					<li>
 						<input class="button" type='submit' value="Start" />
 					</li>
