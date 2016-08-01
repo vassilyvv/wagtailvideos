@@ -44,26 +44,23 @@ class MediaFormats(ChoiceEnum):
 
     def get_quality_param(self, quality):
         if self is MediaFormats.webm:
-            if quality is VideoQuality.lowest:
-                return '50'
-            elif quality is VideoQuality.highest:
-                return '4'
-            return '22'
-
+            return {
+                VideoQuality.lowest: '50',
+                VideoQuality.default: '22',
+                VideoQuality.highest: '4'
+            }[quality]
         elif self is MediaFormats.mp4:
-            if quality is VideoQuality.lowest:
-                return '28'
-            if quality is VideoQuality.highest:
-                return '18'
-            return '24'
-
+            return {
+                VideoQuality.lowest: '28',
+                VideoQuality.default: '24',
+                VideoQuality.highest: '18'
+            }[quality]
         elif self is MediaFormats.ogg:
-            if quality is VideoQuality.lowest:
-                return '5'
-            if quality is VideoQuality.highest:
-                return '9'
-            return '7'
-
+            return {
+                VideoQuality.lowest: '5',
+                VideoQuality.default: '7',
+                VideoQuality.highest: '9'
+            }[quality]
 
 class VideoQuerySet(SearchableQuerySetMixin, models.QuerySet):
     pass
@@ -236,7 +233,9 @@ class AbstractVideo(CollectionMember, TagSearchable):
             transcode.processing = True
             transcode.error_messages = ''
             transcode.quality = quality
-            transcode.save(update_fields=['processing', 'error_message']) # Lock the transcode model
+            # Lock the transcode model
+            transcode.save(update_fields=['processing', 'error_message',
+                                          'quality'])
             TranscodingThread(transcode).start()
         else:
             pass  # TODO Queue?
