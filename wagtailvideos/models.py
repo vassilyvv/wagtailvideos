@@ -31,11 +31,36 @@ from wagtail.wagtailsearch.queryset import SearchableQuerySetMixin
 logger = logging.getLogger(__name__)
 
 
+class VideoQuality(ChoiceEnum):
+    default = 'Default'
+    lowest = 'Low'
+    highest = 'High'
+
+
 class MediaFormats(ChoiceEnum):
     webm = 'VP8 and Vorbis in WebM'
     mp4 = 'H.264 and MP3 in Mp4'
     ogg = 'Theora and Voris in Ogg'
 
+    def get_quality_param(self, quality):
+        if self is MediaFormats.webm:
+            return {
+                VideoQuality.lowest: '50',
+                VideoQuality.default: '22',
+                VideoQuality.highest: '4'
+            }[quality]
+        elif self is MediaFormats.mp4:
+            return {
+                VideoQuality.lowest: '28',
+                VideoQuality.default: '24',
+                VideoQuality.highest: '18'
+            }[quality]
+        elif self is MediaFormats.ogg:
+            return {
+                VideoQuality.lowest: '5',
+                VideoQuality.default: '7',
+                VideoQuality.highest: '9'
+            }[quality]
 
 class VideoQuerySet(SearchableQuerySetMixin, models.QuerySet):
     pass
@@ -200,14 +225,17 @@ class AbstractVideo(CollectionMember, TagSearchable):
         except Transcode.DoesNotExist:
             return self.do_transcode(media_format)
 
-    def do_transcode(self, media_format, force=False):
+    def do_transcode(self, media_format, quality):
         transcode, created = self.transcodes.get_or_create(
             media_format=media_format,
         )
         if transcode.processing is False:
             transcode.processing = True
             transcode.error_messages = ''
-            transcode.save(update_fields=['processing', 'error_message']) # Lock the transcode model
+            transcode.quality = quality
+            # Lock the transcode model
+            transcode.save(update_fields=['processing', 'error_message',
+                                          'quality'])
             TranscodingThread(transcode).start()
         else:
             pass  # TODO Queue?
@@ -242,12 +270,13 @@ class TranscodingThread(threading.Thread):
 
         output_file = os.path.join(output_dir, transcode_name)
         FNULL = open(os.devnull, 'r')
+        quality_param = media_format.get_quality_param(self.transcode.quality)
         args = ['ffmpeg', '-hide_banner', '-i', input_file]
         try:
             if media_format is MediaFormats.ogg:
                 subprocess.check_output(args + [
                     '-codec:v', 'libtheora',
-                    '-qscale:v', '7',
+                    '-qscale:v', quality_param,
                     '-codec:a', 'libvorbis',
                     '-qscale:a', '5',
                     output_file,
@@ -256,15 +285,14 @@ class TranscodingThread(threading.Thread):
                 subprocess.check_output(args + [
                     '-codec:v', 'libx264',
                     '-preset', 'slow', # TODO Checkout other presets
-                    '-crf', '22',
+                    '-crf', quality_param,
                     '-codec:a', 'copy',
                     output_file,
                 ], stdin=FNULL, stderr=subprocess.STDOUT)
             elif media_format is MediaFormats.webm:
                 subprocess.check_output(args + [
                     '-codec:v', 'libvpx',
-                    '-crf', '10',
-                    '-b:v', '1M',
+                    '-crf', quality_param,
                     '-codec:a', 'libvorbis',
                     output_file,
                 ], stdin=FNULL, stderr=subprocess.STDOUT)
@@ -286,6 +314,7 @@ def video_delete(sender, instance, **kwargs):
     instance.thumbnail.delete(False)
     instance.file.delete(False)
 
+
 # Fields that need the actual video file to create
 @receiver(post_save, sender=Video)
 def video_saved(sender, instance, **kwargs):
@@ -298,11 +327,13 @@ def video_saved(sender, instance, **kwargs):
     instance.save()
     del instance._from_signal
 
+
 class AbstractVideoTranscode(models.Model):
     media_format = EnumChoiceField(MediaFormats)
+    quality = EnumChoiceField(VideoQuality, default=VideoQuality.default)
     processing = models.BooleanField(default=False)
-    file = models.FileField(null=True, blank=True,
-        verbose_name=_('file'), upload_to=get_upload_to)
+    file = models.FileField(null=True, blank=True, verbose_name=_('file'),
+                            upload_to=get_upload_to)
     error_message = models.TextField(blank=True)
 
     @property
@@ -325,6 +356,7 @@ class VideoTranscode(AbstractVideoTranscode):
         unique_together = (
             ('video', 'media_format')
         )
+
 
 # Delete files when model is deleted
 @receiver(pre_delete, sender=VideoTranscode)

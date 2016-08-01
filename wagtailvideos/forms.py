@@ -10,7 +10,7 @@ from wagtail.wagtailadmin.forms import (BaseCollectionMemberForm,
                                         collection_member_permission_formset_factory)
 
 from wagtailvideos.fields import WagtailVideoField
-from wagtailvideos.models import MediaFormats, Video
+from wagtailvideos.models import MediaFormats, Video, VideoQuality
 from wagtailvideos.permissions import \
     permission_policy as video_permission_policy
 
@@ -55,6 +55,7 @@ def get_video_form(model):
 
 class VideoTranscodeAdminForm(forms.Form):
     media_format = EnumField(MediaFormats)
+    quality = EnumField(VideoQuality)
 
     def __init__(self, video, data=None,  **kwargs):
         super(VideoTranscodeAdminForm, self).__init__(data=data, **kwargs)
@@ -62,7 +63,8 @@ class VideoTranscodeAdminForm(forms.Form):
 
     def save(self):
         media_format = self.cleaned_data['media_format']
-        self.video.do_transcode(media_format)
+        quality = self.cleaned_data['quality']
+        self.video.do_transcode(media_format, quality)
 
 
 GroupVideoPermissionFormSet = collection_member_permission_formset_factory(

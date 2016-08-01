@@ -1,95 +1,68 @@
-{% extends "wagtailadmin/base.html" %}
-{% load staticfiles i18n wagtailvideos_tags %}
-{% block titletag %}{% blocktrans with title=video.title %}Editing video {{ title }}{% endblocktrans %}{% endblock %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'wagtailvideos/css/edit-video.css' %}" type="text/css" />
-
-{% endblock %}
-
-{% block extra_js %}
-    {{ block.super }}
-
-    {% url 'wagtailadmin_tag_autocomplete' as autocomplete_url %}
-    <script>
-        $(function() {
-            $('#id_tags').tagit({
-                autocomplete: {source: "{{ autocomplete_url|addslashes }}"}
-            });
+{% extends "wagtailadmin/base.html" %} {% load staticfiles i18n wagtailvideos_tags %} {% block titletag %}{% blocktrans with title=video.title %}Editing video {{ title }}{% endblocktrans %}{% endblock %} {% block extra_css %}
+<link rel="stylesheet" href="{% static 'wagtailvideos/css/edit-video.css' %}" type="text/css" /> {% endblock %} {% block extra_js %} {{ block.super }} {% url 'wagtailadmin_tag_autocomplete' as autocomplete_url %}
+<script>
+    $(function() {
+        $('#id_tags').tagit({
+            autocomplete: {
+                source: "{{ autocomplete_url|addslashes }}"
+            }
         });
-    </script>
-{% endblock %}
+    });
+</script>
+{% endblock %} {% block content %} {% trans "Editing" as editing_str %} {% include "wagtailadmin/shared/header.html" with title=editing_str subtitle=video.title icon="media" usage_object=video %}
 
-{% block content %}
-    {% trans "Editing" as editing_str %}
-    {% include "wagtailadmin/shared/header.html" with title=editing_str subtitle=video.title icon="media" usage_object=video %}
+<div class="row row-flush nice-padding">
 
-    <div class="row row-flush nice-padding">
-
-        <div class="col5">
-            <form action="{% url 'wagtailvideos:edit' video.id %}" method="POST" enctype="multipart/form-data">
-                {% csrf_token %}
-                <ul class="fields">
-                    {% for field in form %}
-                        {% if field.name == 'file' %}
-                            {% include "wagtailvideos/videos/_file_field_as_li.html" %}
-                        {% elif field.is_hidden %}
-                            {{ field }}
-                        {% else %}
-                            {% include "wagtailadmin/shared/field_as_li.html" %}
-                        {% endif %}
-                    {% endfor %}
-                    <li>
-                        <input type="submit" class="button" value="{% trans 'Save' %}" />
-                        {% if user_can_delete %}
-                            <a href="{% url 'wagtailvideos:delete' video.id %}" class="button button-secondary no">{% trans "Delete video" %}</a>
-                        {% endif %}
-                    </li>
-                </ul>
-            </form>
-        </div>
-        <div class="col5 divider-after">
-            <h2 class="label">{% trans "Video preview" %}</h2>
-			{% video video controls style=max-width:100% %}
-			<h3 class="label">Transcodes</h3>
-			<p>If you wish to generate HTML5 compliant transcodes use the form below. This may take a while dependung in the length of the video.</p>
-			{% if transcodes %}
-			<h3 class="label">Available Transcodes</h3>
-			<ul>
-			{% for transcode in transcodes %}
-				<li>
-					{{ transcode.media_format }}
-					{% if transcode.processing %} <span class='processing'>(Processing... hold tight) </span>{% endif %}
-					{% if transcode.error_message %}
-					<span class='transcode-error'>ERROR:</span>
-					<div class='transcode-error'>
-						<pre> {{ transcode.error_message }}</pre>
-					</div>
-					{% endif %}
-				</li>
-			{% endfor %}
-			</ul>
-			{% endif %}
-			<h3 class="label">Create transcode</h3>
-			<form action="{% url 'wagtailvideos:create_transcode' video.id %}" method="POST">
-				<ul class="fields">
-					{% csrf_token %}
-					{% include "wagtailadmin/shared/field_as_li.html" with field=transcode_form.media_format %}
-					<li>
-						<input class="button" type='submit' value="Start" />
-					</li>
-				</ul>
-			</form>
-        </div>
-        <div class="col2 ">
-            <dl>
-				<dt>{% trans "Thumbnail" %}</dt>
-				<dd><img src='{{ video.thumbnail.url }}' /></dd>
-                <dt>{% trans "Filesize" %}</dt>
-                <dd>{% if filesize %}{{ filesize|filesizeformat }}{% else %}{% trans "File not found" %}{% endif %}</dd>
-                <dt>{% trans "Duration" %}</dt>
-                <dd>{{ video.formatted_duration }}</dd>
-            </dl>
-        </div>
+    <div class="col5">
+        <form action="{% url 'wagtailvideos:edit' video.id %}" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <ul class="fields">
+                {% for field in form %} {% if field.name == 'file' %} {% include "wagtailvideos/videos/_file_field_as_li.html" %} {% elif field.is_hidden %} {{ field }} {% else %} {% include "wagtailadmin/shared/field_as_li.html" %} {% endif %} {% endfor %}
+                <li>
+                    <input type="submit" class="button" value="{% trans 'Save' %}" /> {% if user_can_delete %}
+                    <a href="{% url 'wagtailvideos:delete' video.id %}" class="button button-secondary no">{% trans "Delete video" %}</a> {% endif %}
+                </li>
+            </ul>
+        </form>
     </div>
+    <div class="col5 divider-after">
+        <h2 class="label">{% trans "Video preview" %}</h2> {% video video controls style=max-width:100% %}
+        <h3 class="label">Transcodes</h3>
+        <p>If you wish to generate HTML5 compliant transcodes use the form below. This may take a while depending on the length of the video.</p>
+        {% if transcodes %}
+        <h3 class="label">Available Transcodes</h3>
+        <ul>
+            {% for transcode in transcodes %}
+            <li>
+                {{ transcode.media_format }} ({{ transcode.quality }} quality) {% if transcode.processing %} <span class='processing'>(Processing... hold tight) </span>{% endif %} {% if transcode.error_message %}
+                <span class='transcode-error'>ERROR:</span>
+                <div class='transcode-error'>
+                    <pre> {{ transcode.error_message }}</pre>
+                </div>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        <h3 class="label">Create transcode</h3>
+        <form action="{% url 'wagtailvideos:create_transcode' video.id %}" method="POST">
+            <ul class="fields">
+                {% csrf_token %} {% include "wagtailadmin/shared/field_as_li.html" with field=transcode_form.media_format %} {% include "wagtailadmin/shared/field_as_li.html" with field=transcode_form.quality %}
+                <li>
+                    <input class="button" type='submit' value="Start" />
+                </li>
+            </ul>
+        </form>
+    </div>
+    <div class="col2 ">
+        <dl>
+            <dt>{% trans "Thumbnail" %}</dt>
+            <dd><img src='{{ video.thumbnail.url }}' /></dd>
+            <dt>{% trans "Filesize" %}</dt>
+            <dd>{% if filesize %}{{ filesize|filesizeformat }}{% else %}{% trans "File not found" %}{% endif %}</dd>
+            <dt>{% trans "Duration" %}</dt>
+            <dd>{{ video.formatted_duration }}</dd>
+        </dl>
+    </div>
+</div>
 {% endblock %}
