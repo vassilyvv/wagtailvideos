@@ -1,5 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
+import mimetypes
+
 from django import template
 from django.forms.widgets import flatatt
 from django.template import resolve_variable
@@ -28,7 +30,6 @@ def video(parser, token):
                 extra_attrs[param] = ''  # attributes without values e.g. autoplay, controls
     return VideoNode(video_expr, extra_attrs)
 
-
 class VideoNode(template.Node):
     def __init__(self, video, attrs={}):
         self.video = template.Variable(video)
@@ -40,8 +41,11 @@ class VideoNode(template.Node):
         if not video:
             raise template.TemplateSyntaxError("video tag requires a Video object as the first parameter")
 
-        sources = ["<source src='{0}' type='video/{1}'>"
-                         .format(video.url, video.file_ext)]  # TODO get mimetype properly (extension is not always reliable)
+        self.attrs['poster'] = video.thumbnail.url
+
+        mime = mimetypes.MimeTypes()
+        sources = ["<source src='{0}' type='{1}'>"
+                   .format(video.url, mime.guess_type(video.url)[0])]
 
         transcodes = video.transcodes.exclude(processing=True).filter(error_message__exact='')
         for transcode in transcodes:

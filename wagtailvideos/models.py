@@ -204,7 +204,6 @@ class AbstractVideo(CollectionMember, TagSearchable):
         transcode, created = self.transcodes.get_or_create(
             media_format=media_format,
         )
-
         if transcode.processing is False:
             transcode.processing = True
             transcode.error_messages = ''
@@ -222,6 +221,7 @@ class Video(AbstractVideo):
         'title',
         'file',
         'collection',
+        'thumbnail',
         'tags',
     )
 

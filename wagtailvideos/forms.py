@@ -2,12 +2,13 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from django import forms
 from django.forms.models import modelform_factory
+from django.forms.widgets import FileInput
 from django.utils.translation import ugettext as _
+from enumchoicefield.forms import EnumField
 from wagtail.wagtailadmin import widgets
 from wagtail.wagtailadmin.forms import (BaseCollectionMemberForm,
                                         collection_member_permission_formset_factory)
 
-from enumchoicefield.forms import EnumField
 from wagtailvideos.fields import WagtailVideoField
 from wagtailvideos.models import MediaFormats, Video
 from wagtailvideos.permissions import \
@@ -48,6 +49,7 @@ def get_video_form(model):
         widgets={
             'tags': widgets.AdminTagWidget,
             'file': forms.FileInput(),
+            'thumbnail': forms.FileInput(),
         })
 
 
@@ -55,7 +57,7 @@ class VideoTranscodeAdminForm(forms.Form):
     media_format = EnumField(MediaFormats)
 
     def __init__(self, video, data=None,  **kwargs):
-        super(VideoTranscodeAdminForm, self).__init__(data=None, **kwargs)
+        super(VideoTranscodeAdminForm, self).__init__(data=data, **kwargs)
         self.video = video
 
     def save(self):
