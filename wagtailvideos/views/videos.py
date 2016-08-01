@@ -126,7 +126,6 @@ def edit(request, video_id):
 def create_transcode(request, video_id):
     if request.method != 'POST':
         return HttpResponseNotAllowed(['POST'])
-
     video = get_object_or_404(Video, id=video_id)
     transcode_form = VideoTranscodeAdminForm(data=request.POST, video=video)
 
