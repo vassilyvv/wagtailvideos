@@ -30,7 +30,7 @@ def get_video_json(video):
         'edit_link': reverse('wagtailvideos:edit', args=(video.id,)),
         'title': video.title,
         'preview': {
-            'url': video.thumbnail.url,
+            'url': video.thumbnail.url if video.thumbnail else '',
         }
     })
 

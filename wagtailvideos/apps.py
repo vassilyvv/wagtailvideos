@@ -1,23 +1,22 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 from django.apps import AppConfig
-from django.core.checks import Error, register
+from django.core.checks import Warning, register
 
-from wagtailvideos.utils import which
+from wagtailvideos.utils import ffmpeg_installed
 
 
-def ffmpeg_check(app_configs, path=None, **kwargs):
-    errors = []
-    if which('ffmpeg', path=path) is None:
-        errors.append(
-            Error(
-                'ffmpeg could not be found on your system, try installing it.',
+def ffmpeg_check(app_configs, **kwargs):
+    messages = []
+    if not ffmpeg_installed():
+        messages.append(
+            Warning(
+                'ffmpeg could not be found on your system. Transcoding will be disabled',
                 hint=None,
-                obj='SystemCheckError',
-                id='wagtailvideos.E001',
+                id='wagtailvideos.W001',
             )
         )
-    return errors
+    return messages
 
 
 class WagtailVideosApp(AppConfig):

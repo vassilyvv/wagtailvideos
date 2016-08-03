@@ -17,7 +17,13 @@
         {% for video in videos %}
             <li>
                 <a class="image-choice" href="{% if will_select_format %}{% url 'wagtailvideos:chooser_select_format' video.id %}{% else %}{% url 'wagtailvideos:video_chosen' video.id %}{% endif %}">
-                    <div class="image"><img src='{{video.thumbnail.url}}' width="165" height="165" class="show-transparency"></div>
+                    <div class="image">
+                        {% if video.thumbnail %}
+                        <img src='{{video.thumbnail.url}}' width="165" height="165" class="show-transparency">
+                        {% else %}
+                        <img width="165" height="165" class="show-transparency">
+                        {% endif %}
+                    </div>
                     <h3>{{ video.title|ellipsistrim:60 }}</h3>
                 </a>
             </li>

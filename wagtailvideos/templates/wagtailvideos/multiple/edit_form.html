@@ -16,7 +16,9 @@
     </ul>
 </form>
 <div data-video-thumb="{{ video.id }}" class='thumb icon icon-image hasthumb'>
+    {% if video.thumbnail %}
 	<img src="{{ video.thumbnail.url }}" />
+    {% endif %}
 </div>
 <script>
 

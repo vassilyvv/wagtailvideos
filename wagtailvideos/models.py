@@ -28,6 +28,8 @@ from wagtail.wagtailcore.models import CollectionMember
 from wagtail.wagtailsearch import index
 from wagtail.wagtailsearch.queryset import SearchableQuerySetMixin
 
+from wagtailvideos.utils import ffmpeg_installed
+
 logger = logging.getLogger(__name__)
 
 
@@ -149,6 +151,9 @@ class AbstractVideo(CollectionMember, TagSearchable):
         if self.duration:
             return self.duration
 
+        if not ffmpeg_installed():
+            return None
+
         file_path = self.file.path
         try:
             # FIXME prints out extra stuff on travis, pip stderr to dev/null
@@ -164,6 +169,9 @@ class AbstractVideo(CollectionMember, TagSearchable):
     def get_thumbnail(self):
         if self.thumbnail:
             return self.thumbnail
+
+        if not ffmpeg_installed():
+            return None
 
         file_path = self.file.path
         file_name = self.filename(include_ext=False) + '_thumb.jpg'

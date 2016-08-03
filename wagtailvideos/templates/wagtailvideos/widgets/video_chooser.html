@@ -4,7 +4,7 @@
 
 {% block chosen_state_view %}
     <div class="video-thumb">
-        {% if video %}
+        {% if video and video.thumbnail %}
             <img src='{{video.thumbnail.url}}' width="165" height="165" class="show-transparency">
         {% else %}
             <img width="165" height="165" class="show-transparency">

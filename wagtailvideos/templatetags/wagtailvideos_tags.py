@@ -41,7 +41,8 @@ class VideoNode(template.Node):
         if not video:
             raise template.TemplateSyntaxError("video tag requires a Video object as the first parameter")
 
-        self.attrs['poster'] = video.thumbnail.url
+        if video.thumbnail:
+            self.attrs['poster'] = video.thumbnail.url
 
         mime = mimetypes.MimeTypes()
         sources = ["<source src='{0}' type='{1}'>"
