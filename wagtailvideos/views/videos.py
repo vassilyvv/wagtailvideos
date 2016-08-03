@@ -17,6 +17,7 @@ from wagtail.wagtailsearch.backends import get_search_backends
 from wagtailvideos.forms import VideoTranscodeAdminForm, get_video_form
 from wagtailvideos.models import Video
 from wagtailvideos.permissions import permission_policy
+from wagtailvideos.utils import ffmpeg_installed
 
 permission_checker = PermissionPolicyChecker(permission_policy)
 
@@ -69,6 +70,7 @@ def index(request):
         })
         return response
 
+
 @permission_checker.require('change')
 def edit(request, video_id):
     VideoForm = get_video_form(Video)
@@ -117,11 +119,11 @@ def edit(request, video_id):
         'video': video,
         'form': form,
         'filesize': video.get_file_size(),
+        'can_transcode': ffmpeg_installed(),
         'transcodes': video.transcodes.all(),
         'transcode_form': VideoTranscodeAdminForm(video=video),
         'user_can_delete': permission_policy.user_has_permission_for_instance(request.user, 'delete', video)
     })
-
 
 def create_transcode(request, video_id):
     if request.method != 'POST':

@@ -27,6 +27,7 @@
     </div>
     <div class="col5 divider-after">
         <h2 class="label">{% trans "Video preview" %}</h2> {% video video controls style=max-width:100% %}
+        {% if can_transcode %}
         <h3 class="label">Transcodes</h3>
         <p>If you wish to generate HTML5 compliant transcodes use the form below. This may take a while depending on the length of the video.</p>
         {% if transcodes %}
@@ -53,15 +54,20 @@
                 </li>
             </ul>
         </form>
+        {% endif %}
     </div>
     <div class="col2 ">
         <dl>
+            {% if video.thumbnail %}
             <dt>{% trans "Thumbnail" %}</dt>
             <dd><img src='{{ video.thumbnail.url }}' /></dd>
+            {% endif %}
             <dt>{% trans "Filesize" %}</dt>
             <dd>{% if filesize %}{{ filesize|filesizeformat }}{% else %}{% trans "File not found" %}{% endif %}</dd>
+            {% if video.duration %}
             <dt>{% trans "Duration" %}</dt>
             <dd>{{ video.formatted_duration }}</dd>
+            {% endif %}
         </dl>
     </div>
 </div>
