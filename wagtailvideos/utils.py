@@ -7,6 +7,4 @@ except ImportError:
 
 
 def ffmpeg_installed(path=None):
-    if which('ffmpeg', path=path) is None:
-        return False
-    return True
+    return which('ffmpeg', path=path) is not None
