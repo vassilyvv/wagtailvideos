@@ -4,3 +4,9 @@ try:
     from shutil import which
 except ImportError:
     from distutils.spawn import find_executable as which
+
+
+def ffmpeg_installed(path=None):
+    if which('ffmpeg', path=path) is None:
+        return False
+    return True
