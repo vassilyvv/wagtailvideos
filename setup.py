@@ -20,6 +20,7 @@ setup(
     install_requires=[
         'wagtail>=1.4',
         'django-enumchoicefield==0.6.0',
+        'mock==2.0.0'
     ],
     zip_safe=False,
     license='BSD License',

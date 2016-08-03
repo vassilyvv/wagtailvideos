@@ -8,6 +8,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse
 from django.template.defaultfilters import filesizeformat
 from django.test import TestCase, override_settings
+from mock import patch
 from wagtail.tests.utils import WagtailTestUtils
 from wagtail.wagtailcore.models import Collection, GroupCollectionPermission
 
@@ -104,6 +105,28 @@ class TestVideoAddView(TestCase, WagtailTestUtils):
         # Test that it was placed in the root collection
         root_collection = Collection.get_first_root_node()
         self.assertEqual(video.collection, root_collection)
+
+    @patch('wagtailvideos.utils.ffmpeg_installed')
+    def test_add_no_ffmpeg(self, mock_ffmpeg):
+        mock_ffmpeg.return_value = False
+
+        video_file = create_test_video_file()
+        title = 'no_ffmpeg'
+
+        response = self.post({
+            'title': title,
+            'file': SimpleUploadedFile('small.mp4', video_file.read(), "video/mp4"),
+        })
+
+        # Should redirect back to index
+        self.assertRedirects(response, reverse('wagtailvideos:index'))
+
+        # Check video exists but has no thumb or duration
+        videos = Video.objects.filter(title=title)
+        self.assertEqual(videos.count(), 1)
+        video = videos.first()
+        self.assertFalse(video.thumbnail)
+        self.assertFalse(video.duration)
 
     def test_add_no_file_selected(self):
         response = self.post({
