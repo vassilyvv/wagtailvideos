@@ -19,6 +19,7 @@ setup(
 
     install_requires=[
         'wagtail>=1.4',
+        'Django>=1.8',
         'django-enumchoicefield==0.6.0',
     ],
     extras_require={
