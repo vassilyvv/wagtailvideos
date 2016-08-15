@@ -264,7 +264,7 @@ class Video(AbstractVideo):
 
 class TranscodingThread(threading.Thread):
     def __init__(self, transcode, **kwargs):
-        super().__init__(**kwargs)
+        super(TranscodingThread, self).__init__(**kwargs)
         self.transcode = transcode
 
     def run(self):
