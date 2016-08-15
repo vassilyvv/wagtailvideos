@@ -106,9 +106,9 @@ class TestVideoAddView(TestCase, WagtailTestUtils):
         root_collection = Collection.get_first_root_node()
         self.assertEqual(video.collection, root_collection)
 
-    @patch('wagtailvideos.utils.ffmpeg_installed')
-    def test_add_no_ffmpeg(self, mock_ffmpeg):
-        mock_ffmpeg.return_value = False
+    @patch('wagtailvideos.models.ffmpeg_installed')
+    def test_add_no_ffmpeg(self, ffmpeg_installed):
+        ffmpeg_installed.return_value = False
 
         video_file = create_test_video_file()
         title = 'no_ffmpeg'
@@ -125,6 +125,7 @@ class TestVideoAddView(TestCase, WagtailTestUtils):
         videos = Video.objects.filter(title=title)
         self.assertEqual(videos.count(), 1)
         video = videos.first()
+
         self.assertFalse(video.thumbnail)
         self.assertFalse(video.duration)
 
