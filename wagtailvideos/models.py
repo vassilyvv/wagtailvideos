@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import datetime
 import logging
+import mimetypes
 import os
 import os.path
 import re
@@ -17,7 +18,9 @@ from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch.dispatcher import receiver
+from django.forms.widgets import flatatt
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils.text import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from enumchoicefield import ChoiceEnum, EnumChoiceField
 from taggit.managers import TaggableManager
@@ -232,6 +235,23 @@ class AbstractVideo(CollectionMember, TagSearchable):
             return self.transcodes.get(media_format=media_format)
         except Transcode.DoesNotExist:
             return self.do_transcode(media_format)
+
+    def video_tag(self, attrs):
+        kw_attrs = {}
+
+        if self.thumbnail:
+            kw_attrs['poster'] = self.thumbnail.url
+
+        mime = mimetypes.MimeTypes()
+        sources = ["<source src='{0}' type='{1}'>"
+                   .format(self.url, mime.guess_type(self.url)[0])]
+
+        transcodes = self.transcodes.exclude(processing=True).filter(error_message__exact='')
+        for transcode in transcodes:
+            sources.append("<source src='{0}' type='video/{1}' >".format(transcode.url, transcode.media_format.name))
+        sources.append("<p>Sorry, your browser doesn't support playback for this video</p>")
+        return mark_safe(
+            "<video {0} {1}>{2}</video>".format(attrs, flatatt(kw_attrs), "\n".join(sources)))
 
     def do_transcode(self, media_format, quality):
         transcode, created = self.transcodes.get_or_create(
