@@ -1,22 +1,14 @@
 from __future__ import absolute_import, unicode_literals
 
-import mimetypes
-
 from jinja2.ext import Extension
 
-from django import template
-from django.forms.widgets import flatatt
-from django.utils.text import mark_safe
+from .models import Video
 
 
-def video(video, attrs):
-    if not video:
-        return ''
-
-    if attrs:
-        return video.video_tag(attrs)
-    else:
-        return video
+def video(video, attrs='preload controls'):
+    if type(video) != Video:
+        raise TypeError('Expected type {0}, received {1}.'.format(Video, type(video)))
+    return video.video_tag(attrs)
 
 
 class WagtailVideosExtension(Extension):
