@@ -236,9 +236,7 @@ class AbstractVideo(CollectionMember, TagSearchable):
         except Transcode.DoesNotExist:
             return self.do_transcode(media_format)
 
-    def video_tag(self, attrs):
-        kw_attrs = {}
-
+    def video_tag(self, attrs, kw_attrs={}):
         if self.thumbnail:
             kw_attrs['poster'] = self.thumbnail.url
 
@@ -251,7 +249,7 @@ class AbstractVideo(CollectionMember, TagSearchable):
             sources.append("<source src='{0}' type='video/{1}' >".format(transcode.url, transcode.media_format.name))
         sources.append("<p>Sorry, your browser doesn't support playback for this video</p>")
         return mark_safe(
-            "<video {0} {1}>{2}</video>".format(attrs, flatatt(kw_attrs), "\n".join(sources)))
+            "<video {0}{1}>{2}</video>".format(attrs, flatatt(kw_attrs), "\n".join(sources)))
 
     def do_transcode(self, media_format, quality):
         transcode, created = self.transcodes.get_or_create(
