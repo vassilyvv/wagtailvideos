@@ -2,8 +2,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 
-from django.core.urlresolvers import NoReverseMatch, reverse
-from django.http import HttpResponseNotAllowed, JsonResponse
+from django.core.urlresolvers import reverse
+from django.http import HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import ugettext as _
 from django.views.decorators.vary import vary_on_headers
@@ -11,15 +11,15 @@ from wagtail.utils.pagination import paginate
 from wagtail.wagtailadmin import messages
 from wagtail.wagtailadmin.forms import SearchForm
 from wagtail.wagtailadmin.utils import PermissionPolicyChecker
-from wagtail.wagtailcore.models import Collection, Site
+from wagtail.wagtailcore.models import Collection
 from wagtail.wagtailsearch.backends import get_search_backends
-
 from wagtailvideos.forms import VideoTranscodeAdminForm, get_video_form
 from wagtailvideos.models import Video
 from wagtailvideos.permissions import permission_policy
 from wagtailvideos.utils import ffmpeg_installed
 
 permission_checker = PermissionPolicyChecker(permission_policy)
+
 
 @permission_checker.require_any('add', 'change', 'delete')
 @vary_on_headers('X-Requested-With')
@@ -124,6 +124,7 @@ def edit(request, video_id):
         'transcode_form': VideoTranscodeAdminForm(video=video),
         'user_can_delete': permission_policy.user_has_permission_for_instance(request.user, 'delete', video)
     })
+
 
 def create_transcode(request, video_id):
     if request.method != 'POST':

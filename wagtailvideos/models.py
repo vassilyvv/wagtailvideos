@@ -24,13 +24,11 @@ from django.utils.text import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from enumchoicefield import ChoiceEnum, EnumChoiceField
 from taggit.managers import TaggableManager
-from unidecode import unidecode
 from wagtail.wagtailadmin.taggable import TagSearchable
 from wagtail.wagtailadmin.utils import get_object_usage
 from wagtail.wagtailcore.models import CollectionMember
 from wagtail.wagtailsearch import index
 from wagtail.wagtailsearch.queryset import SearchableQuerySetMixin
-
 from wagtailvideos.utils import ffmpeg_installed
 
 logger = logging.getLogger(__name__)
@@ -66,6 +64,7 @@ class MediaFormats(ChoiceEnum):
                 VideoQuality.default: '7',
                 VideoQuality.highest: '9'
             }[quality]
+
 
 class VideoQuerySet(SearchableQuerySetMixin, models.QuerySet):
     pass
@@ -314,7 +313,7 @@ class TranscodingThread(threading.Thread):
             elif media_format is MediaFormats.mp4:
                 subprocess.check_output(args + [
                     '-codec:v', 'libx264',
-                    '-preset', 'slow', # TODO Checkout other presets
+                    '-preset', 'slow',  # TODO Checkout other presets
                     '-crf', quality_param,
                     '-codec:a', 'copy',
                     output_file,

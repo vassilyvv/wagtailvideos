@@ -2,13 +2,11 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from django import forms
 from django.forms.models import modelform_factory
-from django.forms.widgets import FileInput
 from django.utils.translation import ugettext as _
 from enumchoicefield.forms import EnumField
 from wagtail.wagtailadmin import widgets
 from wagtail.wagtailadmin.forms import (BaseCollectionMemberForm,
                                         collection_member_permission_formset_factory)
-
 from wagtailvideos.fields import WagtailVideoField
 from wagtailvideos.models import MediaFormats, Video, VideoQuality
 from wagtailvideos.permissions import \
@@ -17,6 +15,7 @@ from wagtailvideos.permissions import \
 
 class BaseVideoForm(BaseCollectionMemberForm):
     permission_policy = video_permission_policy
+
 
 # Callback to allow us to override the default form field for the image file field
 def formfield_for_dbfield(db_field, **kwargs):

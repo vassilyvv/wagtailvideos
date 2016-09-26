@@ -7,7 +7,6 @@ from django.utils.html import format_html, format_html_join
 from django.utils.translation import ugettext_lazy as _
 from wagtail.wagtailadmin.menu import MenuItem
 from wagtail.wagtailcore import hooks
-
 from wagtailvideos.forms import GroupVideoPermissionFormSet
 
 from . import urls
@@ -38,9 +37,11 @@ def editor_js():
         urlresolvers.reverse('wagtailvideos:chooser')
     )
 
+
 @hooks.register('register_group_permission_panel')
 def register_video_permissions_panel():
     return GroupVideoPermissionFormSet
+
 
 @hooks.register('register_admin_menu_item')
 def register_images_menu_item():
