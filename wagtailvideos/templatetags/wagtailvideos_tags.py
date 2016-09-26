@@ -4,9 +4,7 @@ import mimetypes
 
 from django import template
 from django.forms.widgets import flatatt
-from django.template import resolve_variable
 from django.utils.text import mark_safe
-
 from wagtailvideos.models import MediaFormats, Video
 
 register = template.Library()
