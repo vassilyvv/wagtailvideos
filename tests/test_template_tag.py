@@ -16,7 +16,7 @@ class TestVideoTag(TestCase):
 
     def render_video_tag(self, video, attrs=''):
         temp = Template('{% load wagtailvideos_tags %}{% video video_obj ' + attrs + ' %}')
-        context = Context({'video_obj':video})
+        context = Context({'video_obj': video})
         return temp.render(context)
 
     def test_video_tag(self):

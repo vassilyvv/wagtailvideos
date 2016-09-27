@@ -7,6 +7,7 @@ from django.utils.html import format_html, format_html_join
 from django.utils.translation import ugettext_lazy as _
 from wagtail.wagtailadmin.menu import MenuItem
 from wagtail.wagtailcore import hooks
+
 from wagtailvideos.forms import GroupVideoPermissionFormSet
 
 from . import urls

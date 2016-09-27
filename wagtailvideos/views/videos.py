@@ -13,6 +13,7 @@ from wagtail.wagtailadmin.forms import SearchForm
 from wagtail.wagtailadmin.utils import PermissionPolicyChecker
 from wagtail.wagtailcore.models import Collection
 from wagtail.wagtailsearch.backends import get_search_backends
+
 from wagtailvideos.forms import VideoTranscodeAdminForm, get_video_form
 from wagtailvideos.models import Video
 from wagtailvideos.permissions import permission_policy
