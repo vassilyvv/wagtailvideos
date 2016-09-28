@@ -41,7 +41,6 @@ def add(request):
         # no need to show a collections chooser
         collections_to_choose = None
 
-
     if request.method == 'POST':
         if not request.is_ajax():
             return HttpResponseBadRequest("Cannot POST to this view without AJAX")

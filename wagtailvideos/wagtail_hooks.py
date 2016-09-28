@@ -38,9 +38,11 @@ def editor_js():
         urlresolvers.reverse('wagtailvideos:chooser')
     )
 
+
 @hooks.register('register_group_permission_panel')
 def register_video_permissions_panel():
     return GroupVideoPermissionFormSet
+
 
 @hooks.register('register_admin_menu_item')
 def register_images_menu_item():
