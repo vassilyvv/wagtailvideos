@@ -1,24 +1,52 @@
 language: python
 cache: pip
 
-# Matrix of build options
-python:
-  - '2.7'
-  - '3.4'
-  - '3.5'
-
 env:
   global:
     - DJANGO_SETTINGS_MODULE="tests.app.settings"
     - TOX_ENV=
   matrix:
-    - DJANGO='18' WAGTAIL='14'
-    - DJANGO='19' WAGTAIL='14'
-    - DJANGO='18' WAGTAIL='15'
-    - DJANGO='19' WAGTAIL='15'
-    - DJANGO='19' WAGTAIL='16'
-    - DJANGO='110' WAGTAIL='16'
     - TOX_ENV=flake8,isort
+
+matrix:
+  - env: DJANGO='18' WAGTAIL='14'
+    python: 2.7
+  - env: DJANGO='18' WAGTAIL='14'
+    python: 3.4
+  - env: DJANGO='18' WAGTAIL='14'
+    python: 3.5
+  - env: DJANGO='19' WAGTAIL='14'
+    python: 2.7
+  - env: DJANGO='19' WAGTAIL='14'
+    python: 3.4
+  - env: DJANGO='19' WAGTAIL='14'
+    python: 3.5
+  - env: DJANGO='18' WAGTAIL='15'
+    python: 2.7
+  - env: DJANGO='18' WAGTAIL='15'
+    python: 3.4
+  - env: DJANGO='18' WAGTAIL='15'
+    python: 3.5
+  - env: DJANGO='19' WAGTAIL='15'
+    python: 2.7
+  - env: DJANGO='19' WAGTAIL='15'
+    python: 3.4
+  - env: DJANGO='19' WAGTAIL='15'
+    python: 3.5
+  - env: DJANGO='19' WAGTAIL='16'
+    python: 2.7
+  - env: DJANGO='19' WAGTAIL='16'
+    python: 3.4
+  - env: DJANGO='19' WAGTAIL='16'
+    python: 3.5
+  - env: DJANGO='110' WAGTAIL='16'
+    python: 2.7
+  - env: DJANGO='110' WAGTAIL='16'
+    python: 3.4
+  - env: DJANGO='110' WAGTAIL='16'
+    python: 3.5
+  - env: TOX_ENV='flake8,isort'
+    python: 3.5
 
 before_install:
     # - sudo add-apt-repository ppa:mc3man/trusty-media -y // Inlcudes all multimedia options but 404s currently :(
