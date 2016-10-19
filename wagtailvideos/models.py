@@ -244,13 +244,15 @@ class AbstractVideo(CollectionMember, TagSearchable):
         if self.thumbnail:
             attrs['poster'] = self.thumbnail.url
 
-        mime = mimetypes.MimeTypes()
-        sources = ["<source src='{0}' type='{1}'>"
-                   .format(self.url, mime.guess_type(self.url)[0])]
-
         transcodes = self.transcodes.exclude(processing=True).filter(error_message__exact='')
+        sources = []
         for transcode in transcodes:
             sources.append("<source src='{0}' type='video/{1}' >".format(transcode.url, transcode.media_format.name))
+
+        mime = mimetypes.MimeTypes()
+        sources.append("<source src='{0}' type='{1}'>"
+                       .format(self.url, mime.guess_type(self.url)[0]))
+
         sources.append("<p>Sorry, your browser doesn't support playback for this video</p>")
         return mark_safe(
             "<video {0}>\n{1}\n</video>".format(flatatt(attrs), "\n".join(sources)))
