@@ -1,10 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
-import mimetypes
-
 from django import template
-from django.forms.widgets import flatatt
-from django.utils.text import mark_safe
 
 register = template.Library()
 # {% video self.intro_video extra_att extra_att %}
