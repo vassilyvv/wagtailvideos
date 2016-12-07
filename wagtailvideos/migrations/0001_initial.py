@@ -4,8 +4,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import django.db.models.deletion
 import taggit.managers
-import wagtail.wagtailadmin.taggable
 import wagtail.wagtailcore.models
+import wagtail.wagtailsearch.index
 from django.conf import settings
 from django.db import migrations, models
 
@@ -38,6 +38,6 @@ class Migration(migrations.Migration):
             options={
                 'abstract': False,
             },
-            bases=(models.Model, wagtail.wagtailadmin.taggable.TagSearchable),
+            bases=(models.Model,),
         ),
     ]

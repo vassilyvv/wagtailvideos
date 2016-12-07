@@ -7,7 +7,8 @@ from django.shortcuts import get_object_or_404, render
 from wagtail.utils.pagination import paginate
 from wagtail.wagtailadmin.forms import SearchForm
 from wagtail.wagtailadmin.modal_workflow import render_modal_workflow
-from wagtail.wagtailadmin.utils import PermissionPolicyChecker
+from wagtail.wagtailadmin.utils import (
+    PermissionPolicyChecker, popular_tags_for_model)
 from wagtail.wagtailcore.models import Collection
 from wagtail.wagtailsearch import index as search_index
 from wagtail.wagtailsearch.backends import get_search_backends
@@ -88,7 +89,7 @@ def chooser(request):
         'searchform': searchform,
         'is_searching': False,
         'query_string': q,
-        'popular_tags': Video.popular_tags(),
+        'popular_tags': popular_tags_for_model(Video),
         'collections': collections,
     })
 
