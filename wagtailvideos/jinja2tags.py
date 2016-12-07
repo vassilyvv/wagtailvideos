@@ -23,4 +23,5 @@ class WagtailVideosExtension(Extension):
             'video': video,
         })
 
+
 videos = WagtailVideosExtension
