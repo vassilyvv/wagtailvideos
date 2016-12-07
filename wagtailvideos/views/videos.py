@@ -10,7 +10,8 @@ from django.views.decorators.vary import vary_on_headers
 from wagtail.utils.pagination import paginate
 from wagtail.wagtailadmin import messages
 from wagtail.wagtailadmin.forms import SearchForm
-from wagtail.wagtailadmin.utils import PermissionPolicyChecker
+from wagtail.wagtailadmin.utils import (
+    PermissionPolicyChecker, popular_tags_for_model)
 from wagtail.wagtailcore.models import Collection
 from wagtail.wagtailsearch.backends import get_search_backends
 
@@ -66,7 +67,7 @@ def index(request):
             'is_searching': bool(query_string),
 
             'search_form': form,
-            'popular_tags': Video.popular_tags(),
+            'popular_tags': popular_tags_for_model(Video),
             'current_collection': current_collection,
         })
         return response

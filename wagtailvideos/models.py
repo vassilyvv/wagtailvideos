@@ -24,7 +24,6 @@ from django.utils.text import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from enumchoicefield import ChoiceEnum, EnumChoiceField
 from taggit.managers import TaggableManager
-from wagtail.wagtailadmin.taggable import TagSearchable
 from wagtail.wagtailadmin.utils import get_object_usage
 from wagtail.wagtailcore.models import CollectionMember
 from wagtail.wagtailsearch import index
@@ -77,7 +76,7 @@ def get_upload_to(instance, filename):
 
 
 @python_2_unicode_compatible
-class AbstractVideo(CollectionMember, TagSearchable):
+class AbstractVideo(CollectionMember, index.Indexed, models.Model):
     title = models.CharField(max_length=255, verbose_name=_('title'))
     file = models.FileField(
         verbose_name=_('file'), upload_to=get_upload_to)
@@ -95,7 +94,11 @@ class AbstractVideo(CollectionMember, TagSearchable):
 
     objects = VideoQuerySet.as_manager()
 
-    search_fields = list(TagSearchable.search_fields) + list(CollectionMember.search_fields) + [
+    search_fields = list(CollectionMember.search_fields) + [
+        index.SearchField('title', partial_match=True, boost=10),
+        index.RelatedFields('tags', [
+            index.SearchField('name', partial_match=True, boost=10),
+        ]),
         index.FilterField('uploaded_by_user'),
     ]
 
