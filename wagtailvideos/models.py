@@ -227,10 +227,7 @@ class AbstractVideo(CollectionMember, index.Indexed, models.Model):
 
     @classmethod
     def get_transcode_model(cls):
-        if django.VERSION >= (1, 9):
-            return cls.transcodes.rel.related_model
-        else:
-            return cls.transcodes.related.related_model
+        return cls.transcodes.rel.related_model
 
     def get_transcode(self, media_format):
         Transcode = self.get_transcode_model()

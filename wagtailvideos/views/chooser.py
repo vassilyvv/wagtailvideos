@@ -118,12 +118,7 @@ def chooser_upload(request):
             video.save()
 
             # Reindex the video to make sure all tags are indexed
-            from wagtail.wagtailcore import __version__
-            if __version__.startswith("1.4"):
-                for backend in get_search_backends():
-                    backend.add(video)
-            else:
-                search_index.insert_or_update_object(video)
+            search_index.insert_or_update_object(video)
 
             return render_modal_workflow(
                 request, None, 'wagtailvideos/chooser/video_chosen.js',
