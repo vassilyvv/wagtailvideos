@@ -14,7 +14,6 @@ from wagtail.wagtailadmin.utils import (
     PermissionPolicyChecker, popular_tags_for_model)
 from wagtail.wagtailcore.models import Collection
 from wagtail.wagtailsearch.backends import get_search_backends
-
 from wagtailvideos.forms import VideoTranscodeAdminForm, get_video_form
 from wagtailvideos.models import Video
 from wagtailvideos.permissions import permission_policy
@@ -76,7 +75,6 @@ def index(request):
 @permission_checker.require('change')
 def edit(request, video_id):
     VideoForm = get_video_form(Video)
-
     video = get_object_or_404(Video, id=video_id)
 
     if request.POST:
