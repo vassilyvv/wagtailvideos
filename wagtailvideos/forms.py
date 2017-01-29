@@ -7,6 +7,7 @@ from enumchoicefield.forms import EnumField
 from wagtail.wagtailadmin import widgets
 from wagtail.wagtailadmin.forms import (
     BaseCollectionMemberForm, collection_member_permission_formset_factory)
+
 from wagtailvideos.fields import WagtailVideoField
 from wagtailvideos.models import MediaFormats, Video, VideoQuality
 from wagtailvideos.permissions import \

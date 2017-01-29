@@ -27,6 +27,7 @@ from wagtail.wagtailadmin.utils import get_object_usage
 from wagtail.wagtailcore.models import CollectionMember
 from wagtail.wagtailsearch import index
 from wagtail.wagtailsearch.queryset import SearchableQuerySetMixin
+
 from wagtailvideos.utils import ffmpeg_installed
 
 logger = logging.getLogger(__name__)

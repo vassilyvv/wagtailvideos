@@ -14,6 +14,7 @@ from wagtail.wagtailadmin.utils import (
     PermissionPolicyChecker, popular_tags_for_model)
 from wagtail.wagtailcore.models import Collection
 from wagtail.wagtailsearch.backends import get_search_backends
+
 from wagtailvideos.forms import VideoTranscodeAdminForm, get_video_form
 from wagtailvideos.models import Video
 from wagtailvideos.permissions import permission_policy

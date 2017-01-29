@@ -9,9 +9,10 @@ from django.core.urlresolvers import reverse
 from django.template.defaultfilters import filesizeformat
 from django.test import TestCase, override_settings
 from mock import patch
-from tests.utils import create_test_video_file
 from wagtail.tests.utils import WagtailTestUtils
 from wagtail.wagtailcore.models import Collection, GroupCollectionPermission
+
+from tests.utils import create_test_video_file
 from wagtailvideos.models import Video
 
 
