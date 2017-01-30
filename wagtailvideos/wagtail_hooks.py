@@ -8,9 +8,8 @@ from django.utils.translation import ugettext_lazy as _
 from wagtail.wagtailadmin.menu import MenuItem
 from wagtail.wagtailcore import hooks
 
+from wagtailvideos import urls
 from wagtailvideos.forms import GroupVideoPermissionFormSet
-
-from . import urls
 
 
 @hooks.register('register_admin_urls')

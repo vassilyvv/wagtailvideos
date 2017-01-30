@@ -228,6 +228,7 @@ class TestVideoEditView(TestCase, WagtailTestUtils):
         # Check that the video was edited
         video = Video.objects.get(id=self.video.id)
         self.assertEqual(video.title, "Edited")
+        self.assertEqual(self.video.file, video.file)
 
     def test_edit_with_new_video_file(self):
         # Change the file size of the video
