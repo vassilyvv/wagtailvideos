@@ -76,7 +76,6 @@ def index(request):
 @permission_checker.require('change')
 def edit(request, video_id):
     VideoForm = get_video_form(Video)
-
     video = get_object_or_404(Video, id=video_id)
 
     if request.POST:

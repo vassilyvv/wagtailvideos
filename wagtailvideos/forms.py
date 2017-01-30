@@ -17,6 +17,14 @@ from wagtailvideos.permissions import \
 class BaseVideoForm(BaseCollectionMemberForm):
     permission_policy = video_permission_policy
 
+    def __init__(self, *args, **kwargs):
+        super(BaseVideoForm, self).__init__(*args, **kwargs)
+        # A file is only required if there is not already a file, such as when
+        # editing an existing video.  The file field is not used on the
+        # multiple-upload forms, so may not be present
+        if 'file' in self.fields:
+            self.fields['file'].required = 'file' not in self.initial or not self.initial['file']
+
 
 # Callback to allow us to override the default form field for the image file field
 def formfield_for_dbfield(db_field, **kwargs):

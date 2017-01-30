@@ -11,7 +11,6 @@ import subprocess
 import tempfile
 import threading
 
-import django
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.urlresolvers import reverse
