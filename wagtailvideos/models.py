@@ -17,7 +17,7 @@ from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch.dispatcher import receiver
-from django.forms.widgets import flatatt
+from django.forms.utils import flatatt
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.text import mark_safe
 from django.utils.translation import ugettext_lazy as _
