@@ -15,10 +15,9 @@ python:
   - 3.5
 
 env:
-  - DJANGO='19' WAGTAIL='17'
-  - DJANGO='110' WAGTAIL='17'
-  - DJANGO='19' WAGTAIL='18'
-  - DJANGO='110' WAGTAIL='18'
+  - DJANGO='110' WAGTAIL='19'
+  - DJANGO='110' WAGTAIL='110'
+  - DJANGO='111' WAGTAIL='110'
 
 
 matrix:
