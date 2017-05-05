@@ -27,7 +27,7 @@ Using
 On a page model:
 ~~~~~~~~~~~~~~~~
 
-Implement as a ``ForeinKey`` relation, same as wagtailimages.
+Implement as a ``ForeignKey`` relation, same as wagtailimages.
 
 .. code:: python
 
