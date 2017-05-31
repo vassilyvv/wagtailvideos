@@ -12,6 +12,7 @@ import tempfile
 import threading
 
 from django.conf import settings
+from django.core.exceptions import SuspiciousFileOperation
 from django.core.files.base import ContentFile
 from django.core.urlresolvers import reverse
 from django.db import models
@@ -126,12 +127,18 @@ class AbstractVideo(CollectionMember, index.Indexed, models.Model):
     def get_upload_to(self, filename):
         folder_name = 'original_videos'
         filename = self.file.field.storage.get_valid_name(filename)
+        max_length = self._meta.get_field('file').max_length
 
         # Truncate filename so it fits in the 100 character limit
         # https://code.djangoproject.com/ticket/9893
-        while len(os.path.join(folder_name, filename)) >= 95:
-            prefix, dot, extension = filename.rpartition('.')
-            filename = prefix[:-1] + dot + extension
+        file_path = os.path.join(folder_name, filename)
+        too_long = len(file_path) - max_length
+        if too_long > 0:
+            head, ext = os.path.splitext(filename)
+            if too_long > len(head) + 1:
+                raise SuspiciousFileOperation('File name can not be shortened to a safe length')
+            filename = head[:-too_long] + ext
+            file_path = os.path.join(folder_name, filename)
         return os.path.join(folder_name, filename)
 
     def get_usage(self):

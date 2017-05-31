@@ -163,6 +163,21 @@ class TestVideoAddView(TestCase, WagtailTestUtils):
             )
         )
 
+    def test_add_too_long_filename(self):
+        video_file = create_test_video_file()
+
+        name = 'a_very_long_filename_' + ('x' * 100) + '.mp4'
+        response = self.post({
+            'title': "Test video",
+            'file': SimpleUploadedFile(name, video_file.read(), "video/mp4"),
+        })
+
+        # Should be valid
+        self.assertEqual(response.status_code, 302)
+        video = Video.objects.get()
+
+        self.assertEqual(len(video.file.name), Video._meta.get_field('file').max_length)
+
     def test_add_with_collections(self):
         root_collection = Collection.get_first_root_node()
         evil_plans_collection = root_collection.add_child(name="Evil plans")
