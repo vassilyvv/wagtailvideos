@@ -29,7 +29,7 @@ from wagtail.wagtailcore.models import CollectionMember
 from wagtail.wagtailsearch import index
 from wagtail.wagtailsearch.queryset import SearchableQuerySetMixin
 
-from wagtailvideos.utils import ffmpeg_installed
+from wagtailvideos import ffmpeg
 
 logger = logging.getLogger(__name__)
 
@@ -356,6 +356,9 @@ def video_delete(sender, instance, **kwargs):
 # Fields that need the actual video file to create
 @receiver(post_save, sender=Video)
 def video_saved(sender, instance, **kwargs):
+    if not ffmpeg.installed():
+        return
+
     if hasattr(instance, '_from_signal'):
         return
     instance.thumbnail = instance.get_thumbnail()
