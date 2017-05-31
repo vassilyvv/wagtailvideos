@@ -280,6 +280,7 @@ class AbstractVideo(CollectionMember, index.Indexed, models.Model):
 
     class Meta:
         abstract = True
+        ordering = ['-created_at']
 
 
 class Video(AbstractVideo):
