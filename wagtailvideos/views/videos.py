@@ -1,7 +1,5 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
-import os
-
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
@@ -107,14 +105,13 @@ def edit(request, video_id):
     else:
         form = VideoForm(instance=video)
 
-    if video.is_stored_locally():
+    if not video._meta.get_field('file').storage.exists(video.file.name):
         # Give error if image file doesn't exist
-        if not os.path.isfile(video.file.path):
-            messages.error(request, _(
-                "The source video file could not be found. Please change the source or delete the video."
-            ).format(video.title), buttons=[
-                messages.button(reverse('wagtailvideos:delete', args=(video.id,)), _('Delete'))
-            ])
+        messages.error(request, _(
+            "The source video file could not be found. Please change the source or delete the video."
+        ).format(video.title), buttons=[
+            messages.button(reverse('wagtailvideos:delete', args=(video.id,)), _('Delete'))
+        ])
 
     return render(request, "wagtailvideos/videos/edit.html", {
         'video': video,
