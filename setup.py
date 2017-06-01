@@ -10,7 +10,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='wagtailvideos',
-    version='0.3.2',
+    version='0.4.0',
     description="A wagtail module for uploading and displaying videos in various codecs.",
     long_description=readme,
     author='Takeflight',

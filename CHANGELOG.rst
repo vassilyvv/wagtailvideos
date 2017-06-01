@@ -1,8 +1,8 @@
 CHANGELOG
 =========
 
-IN DEVELOPMENT
---------------
+0.4.0
+-----
 
 - Support remote storage engines, like AWS S3.
 
