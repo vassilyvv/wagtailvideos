@@ -1,7 +1,5 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
-import os
-
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
@@ -15,10 +13,10 @@ from wagtail.wagtailadmin.utils import (
 from wagtail.wagtailcore.models import Collection
 from wagtail.wagtailsearch.backends import get_search_backends
 
+from wagtailvideos import ffmpeg
 from wagtailvideos.forms import VideoTranscodeAdminForm, get_video_form
 from wagtailvideos.models import Video
 from wagtailvideos.permissions import permission_policy
-from wagtailvideos.utils import ffmpeg_installed
 
 permission_checker = PermissionPolicyChecker(permission_policy)
 
@@ -107,20 +105,19 @@ def edit(request, video_id):
     else:
         form = VideoForm(instance=video)
 
-    if video.is_stored_locally():
+    if not video._meta.get_field('file').storage.exists(video.file.name):
         # Give error if image file doesn't exist
-        if not os.path.isfile(video.file.path):
-            messages.error(request, _(
-                "The source video file could not be found. Please change the source or delete the video."
-            ).format(video.title), buttons=[
-                messages.button(reverse('wagtailvideos:delete', args=(video.id,)), _('Delete'))
-            ])
+        messages.error(request, _(
+            "The source video file could not be found. Please change the source or delete the video."
+        ).format(video.title), buttons=[
+            messages.button(reverse('wagtailvideos:delete', args=(video.id,)), _('Delete'))
+        ])
 
     return render(request, "wagtailvideos/videos/edit.html", {
         'video': video,
         'form': form,
         'filesize': video.get_file_size(),
-        'can_transcode': ffmpeg_installed(),
+        'can_transcode': ffmpeg.installed(),
         'transcodes': video.transcodes.all(),
         'transcode_form': VideoTranscodeAdminForm(video=video),
         'user_can_delete': permission_policy.user_has_permission_for_instance(request.user, 'delete', video)

@@ -1,18 +1,19 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
-import datetime
 import logging
 import mimetypes
 import os
 import os.path
-import re
 import shutil
 import subprocess
 import tempfile
 import threading
+from contextlib import contextmanager
 
 from django.conf import settings
+from django.core.exceptions import SuspiciousFileOperation
 from django.core.files.base import ContentFile
+from django.core.files.temp import NamedTemporaryFile
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models.signals import post_save, pre_delete
@@ -28,7 +29,7 @@ from wagtail.wagtailcore.models import CollectionMember
 from wagtail.wagtailsearch import index
 from wagtail.wagtailsearch.queryset import SearchableQuerySetMixin
 
-from wagtailvideos.utils import ffmpeg_installed
+from wagtailvideos import ffmpeg
 
 logger = logging.getLogger(__name__)
 
@@ -101,15 +102,9 @@ class AbstractVideo(CollectionMember, index.Indexed, models.Model):
         index.FilterField('uploaded_by_user'),
     ]
 
-    def is_stored_locally(self):
-        """
-        Returns True if the image is hosted on the local filesystem
-        """
-        try:
-            self.file.path
-            return True
-        except NotImplementedError:
-            return False
+    def __init__(self, *args, **kwargs):
+        super(AbstractVideo, self).__init__(*args, **kwargs)
+        self._initial_file = self.file
 
     def get_file_size(self):
         if self.file_size is None:
@@ -126,12 +121,18 @@ class AbstractVideo(CollectionMember, index.Indexed, models.Model):
     def get_upload_to(self, filename):
         folder_name = 'original_videos'
         filename = self.file.field.storage.get_valid_name(filename)
+        max_length = self._meta.get_field('file').max_length
 
         # Truncate filename so it fits in the 100 character limit
         # https://code.djangoproject.com/ticket/9893
-        while len(os.path.join(folder_name, filename)) >= 95:
-            prefix, dot, extension = filename.rpartition('.')
-            filename = prefix[:-1] + dot + extension
+        file_path = os.path.join(folder_name, filename)
+        too_long = len(file_path) - max_length
+        if too_long > 0:
+            head, ext = os.path.splitext(filename)
+            if too_long > len(head) + 1:
+                raise SuspiciousFileOperation('File name can not be shortened to a safe length')
+            filename = head[:-too_long] + ext
+            file_path = os.path.join(folder_name, filename)
         return os.path.join(folder_name, filename)
 
     def get_usage(self):
@@ -151,57 +152,6 @@ class AbstractVideo(CollectionMember, index.Indexed, models.Model):
 
     def __str__(self):
         return self.title
-
-    def get_duration(self):
-        if self.duration:
-            return self.duration
-
-        if not ffmpeg_installed():
-            return None
-
-        file_path = self.file.path
-        try:
-            # FIXME prints out extra stuff on travis, pip stderr to dev/null
-            show_format = subprocess.check_output(['ffprobe', file_path, '-show_format', '-v', 'quiet'])
-            show_format = show_format.decode("utf-8")
-            # show_format comes out in key=value pairs seperated by newlines
-            duration = re.findall(r'([duration^=]+)=([^=]+)(?:\n|$)', show_format)[0][1]
-            return datetime.timedelta(seconds=float(duration))
-        except subprocess.CalledProcessError:
-            logger.exception("Getting video duration failed")
-            return None
-
-    def get_thumbnail(self):
-        if self.thumbnail:
-            return self.thumbnail
-
-        if not ffmpeg_installed():
-            return None
-
-        file_path = self.file.path
-        file_name = self.filename(include_ext=False) + '_thumb.jpg'
-
-        try:
-            output_dir = tempfile.mkdtemp()
-            output_file = os.path.join(output_dir, file_name)
-            try:
-                FNULL = open(os.devnull, 'r')
-                subprocess.check_call([
-                    'ffmpeg',
-                    '-v', 'quiet',
-                    '-itsoffset', '-4',
-                    '-i', file_path,
-                    '-vcodec', 'mjpeg',
-                    '-vframes', '1',
-                    '-an', '-f', 'rawvideo',
-                    '-s', '320x240',
-                    output_file,
-                ], stdin=FNULL)
-            except subprocess.CalledProcessError:
-                return None
-            return ContentFile(open(output_file, 'rb').read(), file_name)
-        finally:
-            shutil.rmtree(output_dir, ignore_errors=True)
 
     def save(self, **kwargs):
         super(AbstractVideo, self).save(**kwargs)
@@ -273,6 +223,7 @@ class AbstractVideo(CollectionMember, index.Indexed, models.Model):
 
     class Meta:
         abstract = True
+        ordering = ['-created_at']
 
 
 class Video(AbstractVideo):
@@ -339,6 +290,29 @@ class TranscodingThread(threading.Thread):
             shutil.rmtree(output_dir, ignore_errors=True)
 
 
+@contextmanager
+def get_local_file(file):
+    """
+    Get a local version of the file, downloading it from the remote storage if
+    required. The returned value should be used as a context manager to
+    ensure any temporary files are cleaned up afterwards.
+    """
+    try:
+        with open(file.path):
+            yield file.path
+    except NotImplementedError:
+        _, ext = os.path.splitext(file.name)
+        with NamedTemporaryFile(prefix='wagtailvideo-', suffix=ext) as tmp:
+            try:
+                file.open('rb')
+                for chunk in file.chunks():
+                    tmp.write(chunk)
+            finally:
+                file.close()
+            tmp.flush()
+            yield tmp.name
+
+
 # Delete files when model is deleted
 @receiver(pre_delete, sender=Video)
 def video_delete(sender, instance, **kwargs):
@@ -349,10 +323,22 @@ def video_delete(sender, instance, **kwargs):
 # Fields that need the actual video file to create
 @receiver(post_save, sender=Video)
 def video_saved(sender, instance, **kwargs):
+    if not ffmpeg.installed():
+        return
+
     if hasattr(instance, '_from_signal'):
         return
-    instance.thumbnail = instance.get_thumbnail()
-    instance.duration = instance.get_duration()
+
+    has_changed = instance._initial_file is not instance.file
+    filled_out = instance.thumbnail is not None and instance.duration is not None
+    if has_changed or not filled_out:
+        with get_local_file(instance.file) as file_path:
+            if has_changed or instance.thumbnail is None:
+                instance.thumbnail = ffmpeg.get_thumbnail(file_path)
+
+            if has_changed or instance.duration is None:
+                instance.duration = ffmpeg.get_duration(file_path)
+
     instance.file_size = instance.file.size
     instance._from_signal = True
     instance.save()

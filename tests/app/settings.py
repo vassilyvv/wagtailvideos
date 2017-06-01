@@ -71,6 +71,8 @@ TEMPLATES = [
     },
 ]
 
+DEFAULT_FILE_STORAGE = 'tests.storage.RemoteStorage'
+
 STATIC_ROOT = os.path.join(os.path.dirname(__file__), 'static')
 STATIC_URL = '/static/'
 
