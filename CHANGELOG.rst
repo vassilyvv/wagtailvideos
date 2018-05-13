@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+2.0.0
+-----
+
+- Dropped python2
+- Updated wagtail dependency to 2.0
+
 0.4.0
 -----
 

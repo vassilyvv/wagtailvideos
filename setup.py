@@ -18,8 +18,8 @@ setup(
     url='https://github.com/takeflight/wagtailvideos',
 
     install_requires=[
-        'wagtail>=1.7',
-        'Django>=1.9',
+        'wagtail>=2.0',
+        'Django>=2.0',
         'django-enumchoicefield==0.6.0',
     ],
     extras_require={

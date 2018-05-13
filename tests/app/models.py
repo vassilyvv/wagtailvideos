@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
 from django.db import models
-from wagtail.wagtailcore.models import Page
+from wagtail.core.models import Page
 
 from wagtailvideos.edit_handlers import VideoChooserPanel
 

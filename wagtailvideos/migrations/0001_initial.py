@@ -4,8 +4,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import django.db.models.deletion
 import taggit.managers
-import wagtail.wagtailcore.models
-import wagtail.wagtailsearch.index
+import wagtail.core.models
+import wagtail.search.index
 from django.conf import settings
 from django.db import migrations, models
 
@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
                 ('file', models.ImageField(height_field='height', upload_to=wagtailvideos.models.get_upload_to, verbose_name='file', width_field='width')),
                 ('created_at', models.DateTimeField(auto_now_add=True, db_index=True, verbose_name='created at')),
                 ('file_size', models.PositiveIntegerField(editable=False, null=True)),
-                ('collection', models.ForeignKey(default=wagtail.wagtailcore.models.get_root_collection_id, on_delete=django.db.models.deletion.CASCADE, related_name='+', to='wagtailcore.Collection', verbose_name='collection')),
+                ('collection', models.ForeignKey(default=wagtail.core.models.get_root_collection_id, on_delete=django.db.models.deletion.CASCADE, related_name='+', to='wagtailcore.Collection', verbose_name='collection')),
                 ('tags', taggit.managers.TaggableManager(blank=True, help_text=None, through='taggit.TaggedItem', to='taggit.Tag', verbose_name='tags')),
                 ('uploaded_by_user', models.ForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL, verbose_name='uploaded by user')),
             ],

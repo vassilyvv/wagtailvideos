@@ -145,33 +145,6 @@ class RemoteStorage(FileSystemStorage):
             url = url.lstrip('/')
         return urljoin(self.base_url, url)
 
-    def accessed_time(self, name):
-        warnings.warn(
-            'FileSystemStorage.accessed_time() is deprecated in favor of '
-            'get_accessed_time().',
-            RemovedInDjango20Warning,
-            stacklevel=2,
-        )
-        return datetime.fromtimestamp(os.path.getatime(self.path(name)))
-
-    def created_time(self, name):
-        warnings.warn(
-            'FileSystemStorage.created_time() is deprecated in favor of '
-            'get_created_time().',
-            RemovedInDjango20Warning,
-            stacklevel=2,
-        )
-        return datetime.fromtimestamp(os.path.getctime(self.path(name)))
-
-    def modified_time(self, name):
-        warnings.warn(
-            'FileSystemStorage.modified_time() is deprecated in favor of '
-            'get_modified_time().',
-            RemovedInDjango20Warning,
-            stacklevel=2,
-        )
-        return datetime.fromtimestamp(os.path.getmtime(self.path(name)))
-
     def _datetime_from_timestamp(self, ts):
         """
         If timezone support is enabled, make an aware datetime object in UTC;
