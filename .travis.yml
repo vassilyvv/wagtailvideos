@@ -10,14 +10,15 @@ env:
 
 
 python:
-  - 2.7
   - 3.4
   - 3.5
+  - 3.6
 
 env:
-  - DJANGO='110' WAGTAIL='19'
-  - DJANGO='110' WAGTAIL='110'
-  - DJANGO='111' WAGTAIL='110'
+  - DJANGO='111' WAGTAIL='20'
+  - DJANGO='111' WAGTAIL='21'
+  - DJANGO='20' WAGTAIL='20'
+  - DJANGO='20' WAGTAIL='21'
 
 
 matrix:
@@ -26,7 +27,7 @@ matrix:
       python: 3.5
 
 before_install:
-    # - sudo add-apt-repository ppa:mc3man/trusty-media -y // Inlcudes all multimedia options but 404s currently :(
+    - sudo add-apt-repository ppa:mc3man/trusty-media -y
     - sudo apt-get update -qq
     - sudo apt-get install ffmpeg -y
 

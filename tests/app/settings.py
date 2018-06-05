@@ -41,7 +41,7 @@ DEBUG = True
 USE_TZ = True
 TIME_ZONE = 'Australia/Hobart'
 
-MIDDLEWARE_CLASSES = [
+MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',

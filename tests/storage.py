@@ -1,6 +1,5 @@
 import errno
 import os
-import warnings
 from datetime import datetime
 
 from django.conf import settings
@@ -10,7 +9,6 @@ from django.core.files.storage import FileSystemStorage
 from django.utils import timezone
 from django.utils._os import safe_join
 from django.utils.deconstruct import deconstructible
-from django.utils.deprecation import RemovedInDjango20Warning
 from django.utils.encoding import filepath_to_uri, force_text
 from django.utils.six.moves.urllib.parse import urljoin
 
