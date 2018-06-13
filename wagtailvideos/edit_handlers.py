@@ -10,6 +10,5 @@ class VideoChooserPanel(BaseChooserPanel):
 
     object_type_name = "video"
 
-    @classmethod
-    def widget_overrides(cls):
-        return {cls.field_name: AdminVideoChooser}
+    def widget_overrides(self):
+        return {self.field_name: AdminVideoChooser}
