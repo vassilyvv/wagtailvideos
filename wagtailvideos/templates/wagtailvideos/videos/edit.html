@@ -1,4 +1,4 @@
-{% extends "wagtailadmin/base.html" %} {% load staticfiles i18n wagtailvideos_tags %} {% block titletag %}{% blocktrans with title=video.title %}Editing video {{ title }}{% endblocktrans %}{% endblock %} {% block extra_css %}
+{% extends "wagtailadmin/base.html" %} {% load staticfiles wagtailadmin_tags i18n wagtailvideos_tags %} {% block titletag %}{% blocktrans with title=video.title %}Editing video {{ title }}{% endblocktrans %}{% endblock %} {% block extra_css %}
 <link rel="stylesheet" href="{% static 'wagtailvideos/css/edit-video.css' %}" type="text/css" /> {% endblock %} {% block extra_js %} {{ block.super }} {% url 'wagtailadmin_tag_autocomplete' as autocomplete_url %}
 <script>
     $(function() {
@@ -9,7 +9,7 @@
         });
     });
 </script>
-{% endblock %} {% block content %} {% trans "Editing" as editing_str %} {% include "wagtailadmin/shared/header.html" with title=editing_str subtitle=video.title icon="media" usage_object=video %}
+{% endblock %} {% block content %} {% trans "Editing" as editing_str %} {% include "wagtailadmin/shared/header.html" with title=editing_str subtitle=video.title icon="media" %}
 
 <div class="row row-flush nice-padding">
 
@@ -70,6 +70,13 @@
             {% if video.duration %}
             <dt>{% trans "Duration" %}</dt>
             <dd>{{ video.formatted_duration }}</dd>
+            {% usage_count_enabled as uc_enabled %}
+            {% if uc_enabled %}
+                <dt>{% trans "Usage" %}</dt>
+                <dd>
+                    <a href="{{ video.usage_url }}">{% blocktrans count usage_count=video.get_usage.count %}Used {{ usage_count }} time{% plural %}Used {{ usage_count }} times{% endblocktrans %}</a>
+                </dd>
+            {% endif %}
             {% endif %}
         </dl>
     </div>

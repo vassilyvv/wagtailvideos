@@ -12,11 +12,11 @@ from django.conf import settings
 from django.core.exceptions import SuspiciousFileOperation
 from django.core.files.base import ContentFile
 from django.core.files.temp import NamedTemporaryFile
-from django.urls import reverse
 from django.db import models
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch.dispatcher import receiver
 from django.forms.utils import flatatt
+from django.urls import reverse
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.text import mark_safe
 from django.utils.translation import ugettext_lazy as _

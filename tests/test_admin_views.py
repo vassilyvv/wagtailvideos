@@ -5,12 +5,12 @@ import json
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.urls import reverse
 from django.template.defaultfilters import filesizeformat
 from django.test import TestCase, override_settings
+from django.urls import reverse
 from mock import patch
-from wagtail.tests.utils import WagtailTestUtils
 from wagtail.core.models import Collection, GroupCollectionPermission
+from wagtail.tests.utils import WagtailTestUtils
 
 from tests.utils import create_test_video_file
 from wagtailvideos.models import Video

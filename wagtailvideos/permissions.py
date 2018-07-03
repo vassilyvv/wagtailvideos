@@ -1,5 +1,5 @@
-from wagtail.core.permission_policies.collections import \
-    CollectionOwnershipPermissionPolicy
+from wagtail.core.permission_policies.collections import (
+    CollectionOwnershipPermissionPolicy)
 
 from wagtailvideos.models import Video
 

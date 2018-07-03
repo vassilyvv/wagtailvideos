@@ -29,7 +29,8 @@ matrix:
 before_install:
     - sudo add-apt-repository ppa:mc3man/trusty-media -y
     - sudo apt-get update -qq
-    - sudo apt-get install ffmpeg -y
+    # The install of ffmpeg fails at random with 'There were unauthenticated packages' 🤷‍♂️
+    - sudo apt-get install ffmpeg --allow-unauthenticated -y
 
 install:
   - pip install --upgrade pip wheel tox

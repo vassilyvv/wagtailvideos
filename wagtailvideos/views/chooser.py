@@ -1,14 +1,13 @@
 import json
 
-from django.urls import reverse
 from django.shortcuts import get_object_or_404, render
-from wagtail.utils.pagination import paginate
+from django.urls import reverse
 from wagtail.admin.forms import SearchForm
 from wagtail.admin.modal_workflow import render_modal_workflow
-from wagtail.admin.utils import (
-    PermissionPolicyChecker, popular_tags_for_model)
+from wagtail.admin.utils import PermissionPolicyChecker, popular_tags_for_model
 from wagtail.core.models import Collection
 from wagtail.search import index as search_index
+from wagtail.utils.pagination import paginate
 
 from wagtailvideos.forms import get_video_form
 from wagtailvideos.models import Video
