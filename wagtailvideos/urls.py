@@ -1,11 +1,9 @@
-from __future__ import absolute_import, print_function, unicode_literals
-
 from django.conf.urls import url
 
 from wagtailvideos.views import chooser, multiple, videos
 
+app_name = 'wagtailvideos'
 urlpatterns = [
-
     url(r'^$', videos.index, name='index'),
     url(r'^(\d+)/$', videos.edit, name='edit'),
     url(r'^(\d+)/delete/$', videos.delete, name='delete'),

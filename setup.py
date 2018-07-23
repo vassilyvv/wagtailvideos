@@ -10,7 +10,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='wagtailvideos',
-    version='0.4.0',
+    version='2.0.0',
     description="A wagtail module for uploading and displaying videos in various codecs.",
     long_description=readme,
     author='Takeflight',
@@ -18,9 +18,9 @@ setup(
     url='https://github.com/takeflight/wagtailvideos',
 
     install_requires=[
-        'wagtail>=1.7',
-        'Django>=1.9',
-        'django-enumchoicefield==0.6.0',
+        'wagtail>=2.0',
+        'Django>=1.11',
+        'django-enumchoicefield==1.0.0',
     ],
     extras_require={
         'testing': [
@@ -42,11 +42,10 @@ setup(
         'Intended Audience :: Developers',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Framework :: Django',
         'License :: OSI Approved :: BSD License',
     ],

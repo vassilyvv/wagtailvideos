@@ -1,10 +1,8 @@
-from __future__ import absolute_import, print_function, unicode_literals
-
 import json
 
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
-from wagtail.wagtailadmin.widgets import AdminChooser
+from wagtail.admin.widgets import AdminChooser
 
 from wagtailvideos.models import Video
 

@@ -1,5 +1,3 @@
-from __future__ import absolute_import, print_function, unicode_literals
-
 import logging
 import mimetypes
 import os
@@ -14,20 +12,20 @@ from django.conf import settings
 from django.core.exceptions import SuspiciousFileOperation
 from django.core.files.base import ContentFile
 from django.core.files.temp import NamedTemporaryFile
-from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch.dispatcher import receiver
 from django.forms.utils import flatatt
+from django.urls import reverse
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.text import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from enumchoicefield import ChoiceEnum, EnumChoiceField
 from taggit.managers import TaggableManager
-from wagtail.wagtailadmin.utils import get_object_usage
-from wagtail.wagtailcore.models import CollectionMember
-from wagtail.wagtailsearch import index
-from wagtail.wagtailsearch.queryset import SearchableQuerySetMixin
+from wagtail.admin.utils import get_object_usage
+from wagtail.core.models import CollectionMember
+from wagtail.search import index
+from wagtail.search.queryset import SearchableQuerySetMixin
 
 from wagtailvideos import ffmpeg
 
@@ -367,7 +365,7 @@ class AbstractVideoTranscode(models.Model):
 
 
 class VideoTranscode(AbstractVideoTranscode):
-    video = models.ForeignKey(Video, related_name='transcodes')
+    video = models.ForeignKey(Video, related_name='transcodes', on_delete=models.CASCADE)
 
     class Meta:
         unique_together = (
