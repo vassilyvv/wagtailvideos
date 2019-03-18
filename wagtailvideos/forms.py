@@ -3,7 +3,7 @@ from django.forms.models import modelform_factory
 from django.utils.translation import ugettext as _
 from enumchoicefield.forms import EnumField
 from wagtail.admin import widgets
-from wagtail.admin.forms import (
+from wagtail.admin.forms.collections import (
     BaseCollectionMemberForm, collection_member_permission_formset_factory)
 
 from wagtailvideos.fields import WagtailVideoField
@@ -53,7 +53,7 @@ def get_video_form(model):
         # so that when editing, we don't get the 'currently: ...' banner which is
         # a bit pointless here
         widgets={
-            'tags': widgets.AdminTagWidget,
+            # 'tags': widgets.AdminTagWidget,
             'file': forms.FileInput(),
             'thumbnail': forms.FileInput(),
         })

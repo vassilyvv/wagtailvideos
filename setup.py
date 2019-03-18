@@ -10,7 +10,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='wagtailvideos',
-    version='2.0.1',
+    version='2.1.0',
     description="A wagtail module for uploading and displaying videos in various codecs.",
     long_description=readme,
     author='Takeflight',
@@ -20,7 +20,7 @@ setup(
     install_requires=[
         'wagtail>=2.0',
         'Django>=1.11',
-        'django-enumchoicefield==1.0.0',
+        'django-enumchoicefield==1.1.0',
     ],
     extras_require={
         'testing': [

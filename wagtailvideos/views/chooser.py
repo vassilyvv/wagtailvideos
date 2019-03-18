@@ -1,8 +1,9 @@
 import json
+from django.utils.translation import ugettext as _
 
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
-from wagtail.admin.forms import SearchForm
+from wagtail.admin.forms.search import SearchForm
 from wagtail.admin.modal_workflow import render_modal_workflow
 from wagtail.admin.utils import PermissionPolicyChecker, popular_tags_for_model
 from wagtail.core.models import Collection
@@ -31,6 +32,14 @@ def get_video_json(video):
         }
     })
 
+def get_chooser_js_data():
+    """construct context variables needed by the chooser JS"""
+    return {
+        'step': 'chooser',
+        'error_label': _("Server Error"),
+        'error_message': _("Report this error to your webmaster with the following information:"),
+        'tag_autocomplete_url': reverse('wagtailadmin_tag_autocomplete'),
+    }
 
 def chooser(request):
     VideoForm = get_video_form(Video)
@@ -79,7 +88,7 @@ def chooser(request):
 
         paginator, videos = paginate(request, videos, per_page=12)
 
-    return render_modal_workflow(request, 'wagtailvideos/chooser/chooser.html', 'wagtailvideos/chooser/chooser.js', {
+    return render_modal_workflow(request, 'wagtailvideos/chooser/chooser.html', None, {
         'videos': videos,
         'uploadform': uploadform,
         'searchform': searchform,
@@ -87,15 +96,15 @@ def chooser(request):
         'query_string': q,
         'popular_tags': popular_tags_for_model(Video),
         'collections': collections,
-    })
+    }, json_data=get_chooser_js_data())
 
 
 def video_chosen(request, video_id):
     video = get_object_or_404(Video, id=video_id)
 
     return render_modal_workflow(
-        request, None, 'wagtailvideos/chooser/video_chosen.js',
-        {'video_json': get_video_json(video)}
+        request, None, None,
+        None, json_data={'step': 'chosen', 'result': get_video_json(video)}
     )
 
 
