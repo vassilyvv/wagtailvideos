@@ -1,6 +1,7 @@
 from contextlib import contextmanager
 import os
 from django.core.files.temp import NamedTemporaryFile
+from django.core.exceptions import ImproperlyConfigured
 
 from celery import shared_task
 from django.apps import apps
@@ -14,7 +15,7 @@ def get_video_metadata(object_pk, *args):
     print('getting video metadata for %s' % instance)
 
     if not ffmpeg.installed():
-        return
+        raise ImproperlyConfigured("ffmpeg could not be found on your system. Transcoding will be disabled")
 
     with get_local_file(instance.file) as file_path:
         instance.thumbnail = ffmpeg.get_thumbnail(file_path)
@@ -30,7 +31,7 @@ def schedule_default_transcode(object_pk, *args):
     instance = Video.objects.get(pk=object_pk)
     print('transcoding video for %s' % instance)
     if not ffmpeg.installed():
-        return
+        raise ImproperlyConfigured("ffmpeg could not be found on your system. Transcoding will be disabled")
 
     transcode, created = instance.transcodes.get_or_create()
     if transcode.processing is False:

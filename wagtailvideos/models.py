@@ -43,7 +43,7 @@ class MediaFormats(ChoiceEnum):
     webm = 'VP8 and Vorbis in WebM'
     mp4 = 'H.264 and MP3 in Mp4'
     ogg = 'Theora and Voris in Ogg'
-    hap = 'HAP codecs'
+    default = 'Default codec'
 
     def get_quality_param(self, quality):
         if self is MediaFormats.webm:
@@ -64,7 +64,7 @@ class MediaFormats(ChoiceEnum):
                 VideoQuality.default: '7',
                 VideoQuality.highest: '9'
             }[quality]
-        elif self is MediaFormats.hap:
+        elif self is MediaFormats.default:
             return '0'
 
 
@@ -274,7 +274,7 @@ def video_saved(sender, instance, **kwargs):
 
 
 class AbstractVideoTranscode(models.Model):
-    media_format = EnumChoiceField(MediaFormats, default=MediaFormats.hap)
+    media_format = EnumChoiceField(MediaFormats, default=MediaFormats.default)
     quality = EnumChoiceField(VideoQuality, default=VideoQuality.default)
     processing = models.BooleanField(default=False)
     file = models.FileField(null=True, blank=True, verbose_name=_('file'),
@@ -296,7 +296,8 @@ class AbstractVideoTranscode(models.Model):
         media_format = transcode.media_format
         input_file = video.file.path
         output_dir = tempfile.mkdtemp()
-        ext = media_format.name if media_format is not MediaFormats.hap else 'mov'
+        ext = media_format.name if media_format is not MediaFormats.default \
+            else settings.WAGTAILVIDEOS_DEFAULT_COMPRESSION_EXT
         transcode_name = "{0}.{1}".format(
             video.filename(include_ext=False),
             ext)
@@ -329,14 +330,10 @@ class AbstractVideoTranscode(models.Model):
                     '-codec:a', 'libvorbis',
                     output_file,
                 ], stdin=FNULL, stderr=subprocess.STDOUT)
-            elif media_format is MediaFormats.hap:
-                subprocess.check_output(args + [
-                    '-codec:v', 'hap',
-                    '-format', 'hap',
-                    '-chunks', '8',
-                    '-qscale:v', '1',
-                    output_file,
-                ], stdin=FNULL, stderr=subprocess.STDOUT)
+            elif media_format is MediaFormats.default:
+                subprocess.check_output(
+                    args + settings.WAGTAILVIDEOS_DEFAULT_COMPRESSION_ARGS.split() + [output_file],
+                    stdin=FNULL, stderr=subprocess.STDOUT)
 
             transcode_fname = self.get_upload_to(transcode_name)
             transcode_path = os.path.join(
