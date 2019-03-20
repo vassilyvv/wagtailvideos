@@ -61,6 +61,10 @@ msgstr "Редактировать видео"
 msgid "title"
 msgstr "название"
 
+#: wagtailvideos/wagtailvideos/models.py:86
+msgid "looped"
+msgstr "зацикленное"
+
 #: wagtailvideos/wagtailvideos/models.py:84
 #: wagtailvideos/wagtailvideos/models.py:280
 msgid "file"

@@ -83,6 +83,7 @@ class AbstractVideo(CollectionMember, index.Indexed, models.Model):
     file = models.FileField(
         verbose_name=_('file'), upload_to=get_upload_to)
     thumbnail = models.ImageField(upload_to=get_upload_to, null=True, blank=True, verbose_name=_('thumbnail'))
+    looped = models.BooleanField(default=False, verbose_name=_('looped'))
     created_at = models.DateTimeField(verbose_name=_('created at'), auto_now_add=True, db_index=True)
     duration = models.DurationField(blank=True, null=True)
     uploaded_by_user = models.ForeignKey(
@@ -234,6 +235,7 @@ class Video(AbstractVideo):
         'file',
         'collection',
         'thumbnail',
+        'looped',
         'tags',
     )
 

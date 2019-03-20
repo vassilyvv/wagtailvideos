@@ -17,7 +17,7 @@
         <form action="{% url 'wagtailvideos:edit' video.id %}" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
             <ul class="fields">
-                {% for field in form %} {% if field.name == 'file' %} {% include "wagtailvideos/videos/_file_field_as_li.html" %} {% elif field.is_hidden %} {{ field }} {% else %} {% include "wagtailadmin/shared/field_as_li.html" %} {% endif %} {% endfor %}
+                {% for field in form %} {% if field.name == 'file' %} {% include "wagtailvideos/videos/_file_field_as_li.html"  with li_classes="label-above label-uppercase" %} {% elif field.is_hidden %} {{ field }} {% else %} {% include "wagtailadmin/shared/field_as_li.html" with li_classes="label-above label-uppercase" %} {% endif %} {% endfor %}
                 <li>
                     <input type="submit" class="button" value="{% trans 'Save' %}" /> {% if user_can_delete %}
                     <a href="{% url 'wagtailvideos:delete' video.id %}" class="button button-secondary no">{% trans "Delete video" %}</a> {% endif %}
@@ -27,6 +27,7 @@
     </div>
     <div class="col5 divider-after">
         <h2 class="label">{% trans "Video preview" %}</h2> {% video video controls style=max-width:100% %}
+            {% comment %}
         {% if can_transcode %}
             <h3 class="label">Transcodes</h3>
             <p>If you wish to generate HTML5 compliant transcodes use the form below. This may take a while depending on the length of the video.</p>
@@ -58,6 +59,7 @@
             <br/><br/>
             <span class='transcode-error'>Ffmpeg is not found on your server. Please install if you wish to transcode videos into an HTML5 video compliant format.</span>
         {% endif %}
+        {% endcomment %}
     </div>
     <div class="col2 ">
         <dl>

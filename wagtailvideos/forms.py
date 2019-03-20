@@ -56,7 +56,7 @@ def get_video_form(model):
         widgets={
             # 'tags': widgets.AdminTagWidget,
             'file': forms.FileInput(),
-            'thumbnail': forms.FileInput(),
+            # 'thumbnail': forms.FileInput(),
         })
 
 
