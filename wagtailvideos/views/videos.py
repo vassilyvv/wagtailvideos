@@ -50,7 +50,7 @@ def index(request):
     # Create response
     if request.is_ajax():
         response = render(request, 'wagtailvideos/videos/results.html', {
-            'vidoes': videos,
+            'videos': videos,
             'query_string': query_string,
             'is_searching': bool(query_string),
         })

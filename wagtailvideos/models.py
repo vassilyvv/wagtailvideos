@@ -6,13 +6,9 @@ import shutil
 import subprocess
 import tempfile
 import threading
-from contextlib import contextmanager
 
 from django.conf import settings
 from django.core.exceptions import SuspiciousFileOperation
-from django.core.files.base import ContentFile
-from django.core.files.temp import NamedTemporaryFile
-from django.db import models
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch.dispatcher import receiver
 from django.forms.utils import flatatt
@@ -20,6 +16,8 @@ from django.urls import reverse
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.text import mark_safe
 from django.utils.translation import ugettext_lazy as _
+from django.db import models
+from celery import chain
 from enumchoicefield import ChoiceEnum, EnumChoiceField
 from taggit.managers import TaggableManager
 from wagtail.admin.utils import get_object_usage
@@ -27,7 +25,10 @@ from wagtail.core.models import CollectionMember
 from wagtail.search import index
 from wagtail.search.queryset import SearchableQuerySetMixin
 
-from wagtailvideos import ffmpeg
+from wagtailvideos.tasks import (
+    get_video_metadata, schedule_default_transcode, transcoding_task,
+)
+
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +43,7 @@ class MediaFormats(ChoiceEnum):
     webm = 'VP8 and Vorbis in WebM'
     mp4 = 'H.264 and MP3 in Mp4'
     ogg = 'Theora and Voris in Ogg'
+    hap = 'HAP codecs'
 
     def get_quality_param(self, quality):
         if self is MediaFormats.webm:
@@ -62,6 +64,8 @@ class MediaFormats(ChoiceEnum):
                 VideoQuality.default: '7',
                 VideoQuality.highest: '9'
             }[quality]
+        elif self is MediaFormats.hap:
+            return '0'
 
 
 class VideoQuerySet(SearchableQuerySetMixin, models.QuerySet):
@@ -210,12 +214,12 @@ class AbstractVideo(CollectionMember, index.Indexed, models.Model):
         )
         if transcode.processing is False:
             transcode.processing = True
-            transcode.error_messages = ''
+            transcode.error_message = ''
             transcode.quality = quality
             # Lock the transcode model
             transcode.save(update_fields=['processing', 'error_message',
                                           'quality'])
-            TranscodingThread(transcode).start()
+            TranscodingTask(transcode).start()
         else:
             pass  # TODO Queue?
 
@@ -234,23 +238,72 @@ class Video(AbstractVideo):
     )
 
 
+class TranscodingTask:
+    def __init__(self, transcode):
+        self.transcode = transcode
+
+    def start(self):
+        transcoding_task.delay(self.transcode.pk)
+
+
 class TranscodingThread(threading.Thread):
     def __init__(self, transcode, **kwargs):
         super(TranscodingThread, self).__init__(**kwargs)
         self.transcode = transcode
 
     def run(self):
-        video = self.transcode.video
-        media_format = self.transcode.media_format
+        self.transcode.run_transcoding()
+
+# Delete files when model is deleted
+@receiver(pre_delete, sender=Video)
+def video_delete(sender, instance, **kwargs):
+    instance.thumbnail.delete(False)
+    instance.file.delete(False)
+
+
+# Fields that need the actual video file to create
+@receiver(post_save, sender=Video)
+def video_saved(sender, instance, **kwargs):
+    print("video saved...")
+    if hasattr(instance, '_initial_file'):
+        if instance.file != instance._initial_file:
+            chain(
+                get_video_metadata.si(object_pk=instance.pk),
+                schedule_default_transcode.si(object_pk=instance.pk),
+            )()
+
+
+class AbstractVideoTranscode(models.Model):
+    media_format = EnumChoiceField(MediaFormats, default=MediaFormats.hap)
+    quality = EnumChoiceField(VideoQuality, default=VideoQuality.default)
+    processing = models.BooleanField(default=False)
+    file = models.FileField(null=True, blank=True, verbose_name=_('file'),
+                            upload_to=get_upload_to)
+    error_message = models.TextField(blank=True)
+
+    @property
+    def url(self):
+        return self.file.url
+
+    def get_upload_to(self, filename):
+        folder_name = 'video_transcodes'
+        filename = self.file.field.storage.get_valid_name(filename)
+        return os.path.join(folder_name, filename)
+
+    def run_transcoding(self):
+        transcode = self
+        video = transcode.video
+        media_format = transcode.media_format
         input_file = video.file.path
         output_dir = tempfile.mkdtemp()
+        ext = media_format.name if media_format is not MediaFormats.hap else 'mov'
         transcode_name = "{0}.{1}".format(
             video.filename(include_ext=False),
-            media_format.name)
+            ext)
 
         output_file = os.path.join(output_dir, transcode_name)
         FNULL = open(os.devnull, 'r')
-        quality_param = media_format.get_quality_param(self.transcode.quality)
+        quality_param = media_format.get_quality_param(transcode.quality)
         args = ['ffmpeg', '-hide_banner', '-i', input_file]
         try:
             if media_format is MediaFormats.ogg:
@@ -276,89 +329,30 @@ class TranscodingThread(threading.Thread):
                     '-codec:a', 'libvorbis',
                     output_file,
                 ], stdin=FNULL, stderr=subprocess.STDOUT)
-            self.transcode.file = ContentFile(
-                open(output_file, 'rb').read(), transcode_name)
-            self.transcode.error_message = ''
+            elif media_format is MediaFormats.hap:
+                subprocess.check_output(args + [
+                    '-codec:v', 'hap',
+                    '-format', 'hap',
+                    '-chunks', '8',
+                    '-qscale:v', '1',
+                    output_file,
+                ], stdin=FNULL, stderr=subprocess.STDOUT)
+
+            transcode_fname = self.get_upload_to(transcode_name)
+            transcode_path = os.path.join(
+                settings.MEDIA_ROOT,
+                transcode_fname
+            )
+            shutil.move(output_file, transcode_path)
+            transcode.file.name = transcode_fname
+            transcode.error_message = ''
         except subprocess.CalledProcessError as error:
-            self.transcode.error_message = error.output
+            transcode.error_message = error.output
 
         finally:
-            self.transcode.processing = False
-            self.transcode.save()
+            transcode.processing = False
+            transcode.save()
             shutil.rmtree(output_dir, ignore_errors=True)
-
-
-@contextmanager
-def get_local_file(file):
-    """
-    Get a local version of the file, downloading it from the remote storage if
-    required. The returned value should be used as a context manager to
-    ensure any temporary files are cleaned up afterwards.
-    """
-    try:
-        with open(file.path):
-            yield file.path
-    except NotImplementedError:
-        _, ext = os.path.splitext(file.name)
-        with NamedTemporaryFile(prefix='wagtailvideo-', suffix=ext) as tmp:
-            try:
-                file.open('rb')
-                for chunk in file.chunks():
-                    tmp.write(chunk)
-            finally:
-                file.close()
-            tmp.flush()
-            yield tmp.name
-
-
-# Delete files when model is deleted
-@receiver(pre_delete, sender=Video)
-def video_delete(sender, instance, **kwargs):
-    instance.thumbnail.delete(False)
-    instance.file.delete(False)
-
-
-# Fields that need the actual video file to create
-@receiver(post_save, sender=Video)
-def video_saved(sender, instance, **kwargs):
-    if not ffmpeg.installed():
-        return
-
-    if hasattr(instance, '_from_signal'):
-        return
-
-    has_changed = instance._initial_file is not instance.file
-    filled_out = instance.thumbnail is not None and instance.duration is not None
-    if has_changed or not filled_out:
-        with get_local_file(instance.file) as file_path:
-            if has_changed or instance.thumbnail is None:
-                instance.thumbnail = ffmpeg.get_thumbnail(file_path)
-
-            if has_changed or instance.duration is None:
-                instance.duration = ffmpeg.get_duration(file_path)
-
-    instance.file_size = instance.file.size
-    instance._from_signal = True
-    instance.save()
-    del instance._from_signal
-
-
-class AbstractVideoTranscode(models.Model):
-    media_format = EnumChoiceField(MediaFormats)
-    quality = EnumChoiceField(VideoQuality, default=VideoQuality.default)
-    processing = models.BooleanField(default=False)
-    file = models.FileField(null=True, blank=True, verbose_name=_('file'),
-                            upload_to=get_upload_to)
-    error_message = models.TextField(blank=True)
-
-    @property
-    def url(self):
-        return self.file.url
-
-    def get_upload_to(self, filename):
-        folder_name = 'video_transcodes'
-        filename = self.file.field.storage.get_valid_name(filename)
-        return os.path.join(folder_name, filename)
 
     class Meta:
         abstract = True
