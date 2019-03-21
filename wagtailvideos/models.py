@@ -342,6 +342,7 @@ class AbstractVideoTranscode(models.Model):
                 settings.MEDIA_ROOT,
                 transcode_fname
             )
+            os.makedirs(os.path.dirname(transcode_path), exist_ok=True)
             shutil.move(output_file, transcode_path)
             transcode.file.name = transcode_fname
             transcode.error_message = ''
