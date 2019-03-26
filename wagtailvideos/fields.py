@@ -3,7 +3,9 @@ from django.core.exceptions import ValidationError
 from django.forms.fields import FileField
 from django.template.defaultfilters import filesizeformat
 from django.utils.translation import ugettext_lazy as _
-from wagtailvideos.tasks import get_video_codec_task
+from wagtailvideos.ffmpeg import get_video_codec, get_video_codec_from_bytes
+import logging
+log = logging.getLogger(__name__)
 
 
 class WagtailVideoField(FileField):
@@ -55,12 +57,18 @@ class WagtailVideoField(FileField):
             ), code='file_too_large')
 
     def check_video_codec(self, f):
-        if len(settings.WAGTAILVIDEOS_ALLOWED_CODECS) < 1:
+        allowed_codecs = getattr(settings, "WAGTAILVIDEOS_ALLOWED_CODECS", ())
+        if len(allowed_codecs) < 1:
             return
 
-        file_path = f.name
-        result = get_video_codec_task.delay(file_path=file_path).get()
-        print("video codec is %s" % result)
+        if hasattr(f, "temporary_file_path"):
+            file_path = f.temporary_file_path()
+            log.debug("temp video file: %s", file_path)
+            result = get_video_codec(file_path)
+        else:
+            ff = f.read()
+            result = get_video_codec_from_bytes(ff)
+        log.debug("video codec is %s", result)
         if result not in settings.WAGTAILVIDEOS_ALLOWED_CODECS:
             raise ValidationError(self.error_messages['codec_is_not_allowed'] % result)
 

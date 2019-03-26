@@ -82,15 +82,33 @@ def get_video_codec(file_path):
         fprobe_result = subprocess.check_output(
             ['ffprobe', file_path, '-show_entries', 'stream=codec_name,codec_type', '-of', 'json', '-v', 'quiet'],
             stdin=DEVNULL(), stderr=DEVNULL())
+        return parse_fprobe_result(fprobe_result)
+    except subprocess.CalledProcessError:
+        logger.exception("Getting video duration failed")
+        return None
+
+
+def get_video_codec_from_bytes(bytes_data):
+    if not installed():
+        raise RuntimeError('ffmpeg is not installed')
+    try:
+        fprobe_result = subprocess.check_output(
+            ['ffprobe', '-show_entries', 'stream=codec_name,codec_type', '-of', 'json', '-v', 'quiet', '-'],
+            stderr=DEVNULL(), input=bytes_data)
+        return parse_fprobe_result(fprobe_result)
+    except subprocess.CalledProcessError:
+        logger.exception("Getting video duration failed")
+        return None
+
+
+def parse_fprobe_result(fprobe_result):
+    try:
         fprobe_result = json.loads(fprobe_result)
         video_stream = get_videostream_data(fprobe_result)
         if video_stream is None:
             return None
         else:
             return video_stream["codec_name"]
-    except subprocess.CalledProcessError:
-        logger.exception("Getting video duration failed")
-        return None
     except json.JSONDecodeError:
         logger.exception("Parsing fprobe result failed")
         return None
@@ -99,7 +117,7 @@ def get_video_codec(file_path):
 def get_videostream_data(fprobe_res_dict):
     streams = fprobe_res_dict.get('streams', None)
     if streams is not None:
-        streams = filter(streams, lambda s: s['codec_type'] == 'video')
+        streams = list(filter(lambda s: s['codec_type'] == 'video', streams))
         if len(streams) > 0:
             return streams[0]
     return None
