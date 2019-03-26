@@ -50,6 +50,12 @@ def transcoding_task(transcode_pk, *args):
     transcode.run_transcoding()
 
 
+@shared_task
+def get_video_codec_task(file_path):
+    result = ffmpeg.get_video_codec(file_path)
+    return result
+
+
 @contextmanager
 def get_local_file(file):
     """

@@ -298,8 +298,12 @@ class AbstractVideoTranscode(models.Model):
         media_format = transcode.media_format
         input_file = video.file.path
         output_dir = tempfile.mkdtemp()
+        default_ext = getattr(settings, "WAGTAILVIDEOS_DEFAULT_COMPRESSION_EXT", "mov")
+        default_compression_args = getattr(settings, "WAGTAILVIDEOS_DEFAULT_COMPRESSION_ARGS", None)
+        if media_format is MediaFormats.default and default_compression_args is None:
+            return
         ext = media_format.name if media_format is not MediaFormats.default \
-            else settings.WAGTAILVIDEOS_DEFAULT_COMPRESSION_EXT
+            else default_ext
         transcode_name = "{0}.{1}".format(
             video.filename(include_ext=False),
             ext)
@@ -334,7 +338,7 @@ class AbstractVideoTranscode(models.Model):
                 ], stdin=FNULL, stderr=subprocess.STDOUT)
             elif media_format is MediaFormats.default:
                 subprocess.check_output(
-                    args + settings.WAGTAILVIDEOS_DEFAULT_COMPRESSION_ARGS.split() + [output_file],
+                    args + default_compression_args.split() + [output_file],
                     stdin=FNULL, stderr=subprocess.STDOUT)
 
             transcode_fname = self.get_upload_to(transcode_name)
