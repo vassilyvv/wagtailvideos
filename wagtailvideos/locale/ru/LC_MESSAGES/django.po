@@ -40,6 +40,11 @@ msgstr "Файл слишком большой (%%s). Максимальный �
 msgid "This file is too big. Maximum filesize %s."
 msgstr "Файл слишком большой. Максимальный размер %s."
 
+#: wagtailvideos/wagtailvideos/fields.py:34
+#, python-format
+msgid "Video codec %s is not allowed."
+msgstr "Кодек %s не поддерживается."
+
 #: wagtailvideos/wagtailvideos/forms.py:79
 msgid "Add"
 msgstr "Добавить"
