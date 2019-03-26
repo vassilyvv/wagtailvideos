@@ -121,6 +121,15 @@ class AbstractVideo(CollectionMember, index.Indexed, models.Model):
 
         return self.file_size
 
+    def get_thumbnail_path(self):
+        head, tail = os.path.split(self.file.name)
+        fname, ext = os.path.splitext(tail)
+        thumb_name = '{}_thumb{}'.format(fname, '.jpg')
+        return self.get_upload_to(thumb_name)
+
+    def get_thumbnail_url(self):
+        return os.path.join(settings.MEDIA_URL, self.get_thumbnail_path())
+
     def get_upload_to(self, filename):
         folder_name = 'original_videos'
         filename = self.file.field.storage.get_valid_name(filename)

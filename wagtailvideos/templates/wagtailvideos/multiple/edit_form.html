@@ -1,4 +1,4 @@
-{% load i18n %}
+{% load i18n staticfiles %}
 <form action="{% url 'wagtailvideos:edit_multiple' video.id %}" method="POST" enctype="multipart/form-data">
     <ul class="fields">
         {% csrf_token %}
@@ -16,12 +16,38 @@
     </ul>
 </form>
 <div data-video-thumb="{{ video.id }}" class='thumb icon icon-image hasthumb'>
-    {% if video.thumbnail %}
-	<img src="{{ video.thumbnail.url }}" />
-    {% endif %}
+    <img class="placeholder" src="{% static 'wagtailvideos/img/spinner.gif' %}" />
+	<img class="hidden" style="display:none;" src="{{ video.get_thumbnail_url }}" />
 </div>
 <script>
+  (function() {
 
-	var thumb = $("[data-video-thumb=\"" + {{ video.id }} + "\"]");
-	$("[data-thumb-target=\"" + {{ video.id }} + "\"]").append(thumb);
+   var thumb = $("[data-video-thumb=\"" + {{ video.id }} + "\"]");
+   var placeholder = thumb.find(".placeholder");
+   var original = thumb.find(".hidden");
+   var originalEl = original.get(0);
+   console.log("thumb original" + original);
+   original.on("load", function() {
+       console.log("thumb loaded");
+       original.show(400);
+       placeholder.hide(400);
+       });
+   var increasing = false;
+   original.on("error", function() {
+       console.log("error...");
+
+       if (!increasing) {
+       increasing = true;
+       setTimeout(function() {
+           increasing = false;
+           console.log("increasing for el ", originalEl);
+           originalEl.src=originalEl.src + "?t=" + Date.now();
+           }, 1000);
+       }
+
+       });
+
+   $("[data-thumb-target=\"" + {{ video.id }} + "\"]").append(thumb);
+   })()
+      
 </script>
