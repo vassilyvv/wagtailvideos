@@ -6,13 +6,15 @@ from django.core.exceptions import ImproperlyConfigured
 from celery import shared_task
 from django.apps import apps
 from wagtailvideos import ffmpeg
+import logging
+log = logging.getLogger(__name__)
 
 
 @shared_task
 def get_video_metadata(object_pk, *args):
     Video = apps.get_model(app_label="wagtailvideos", model_name="Video")
     instance = Video.objects.get(pk=object_pk)
-    print('getting video metadata for %s' % instance)
+    log.debug('getting video metadata for %s', instance)
 
     if not ffmpeg.installed():
         raise ImproperlyConfigured("ffmpeg could not be found on your system. Transcoding will be disabled")
@@ -29,7 +31,7 @@ def get_video_metadata(object_pk, *args):
 def schedule_default_transcode(object_pk, *args):
     Video = apps.get_model(app_label="wagtailvideos", model_name="Video")
     instance = Video.objects.get(pk=object_pk)
-    print('transcoding video for %s' % instance)
+    log.debug('transcoding video for %s', instance)
     if not ffmpeg.installed():
         raise ImproperlyConfigured("ffmpeg could not be found on your system. Transcoding will be disabled")
 

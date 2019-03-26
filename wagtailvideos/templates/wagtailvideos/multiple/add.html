@@ -19,7 +19,8 @@
             <form action="{% url 'wagtailvideos:add_multiple' %}" method="POST" enctype="multipart/form-data">
                 <div class="replace-file-input">
                     <button class="button bicolor icon icon-plus">{% trans "Or choose from your computer" %}</button>
-                    <input id="fileupload" type="file" name="files[]" data-url="{% url 'wagtailvideos:add_multiple' %}" multiple>
+                    <input id="fileupload" type="file" name="files[]" data-url="{% url 'wagtailvideos:add_multiple' %}" multiple 
+                    {% if accepted_file_types %}accept="{{accepted_file_types|join:', '}}"{% endif %}>
                 </div>
                 {% csrf_token %}
                 {% if collections %}

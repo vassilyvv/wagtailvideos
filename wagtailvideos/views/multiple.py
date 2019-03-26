@@ -4,6 +4,7 @@ from django.template.loader import render_to_string
 from django.utils.encoding import force_text
 from django.views.decorators.http import require_POST
 from django.views.decorators.vary import vary_on_headers
+from django.conf import settings
 from wagtail.admin.utils import PermissionPolicyChecker
 from wagtail.search.backends import get_search_backends
 
@@ -80,12 +81,14 @@ def add(request):
     else:
         form = VideoForm()
 
+    accepted_file_types = getattr(settings, "WAGTAILVIDEOS_ACCEPTED_FILETYPES", None)
     return render(request, 'wagtailvideos/multiple/add.html', {
         'max_filesize': form.fields['file'].max_upload_size,
         'help_text': form.fields['file'].help_text,
         'error_max_file_size': form.fields['file'].error_messages['file_too_large_unknown_size'],
         'error_accepted_file_types': form.fields['file'].error_messages['invalid_video_format'],
         'collections': collections_to_choose,
+        'accepted_file_types': accepted_file_types
     })
 
 

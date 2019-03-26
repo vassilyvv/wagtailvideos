@@ -30,7 +30,7 @@ from wagtailvideos.tasks import (
 )
 
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 class VideoQuality(ChoiceEnum):
@@ -266,7 +266,7 @@ def video_delete(sender, instance, **kwargs):
 # Fields that need the actual video file to create
 @receiver(post_save, sender=Video)
 def video_saved(sender, instance, **kwargs):
-    print("video saved...")
+    log.debug("video saved...")
     if hasattr(instance, '_initial_file'):
         if instance.file != instance._initial_file:
             chain(
