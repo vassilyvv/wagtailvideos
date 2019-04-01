@@ -17,6 +17,7 @@ function createVideoChooser(id) {
           });
           chooserElement.removeClass('blank');
           editLink.attr('href', videoData.edit_link);
+          chooserElement.trigger("videoChosen", videoData);
         }
       }
     });

@@ -25,6 +25,7 @@ def get_video_json(video):
 
     return json.dumps({
         'id': video.id,
+        'looped': video.looped,
         'edit_link': reverse('wagtailvideos:edit', args=(video.id,)),
         'title': video.title,
         'preview': {
