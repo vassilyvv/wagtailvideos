@@ -14,7 +14,7 @@ from django.dispatch.dispatcher import receiver
 from django.forms.utils import flatatt
 from django.urls import reverse
 from django.utils.encoding import python_2_unicode_compatible
-from django.utils.text import mark_safe
+from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from django.db import models
 from celery import chain
