@@ -127,8 +127,8 @@ def chooser_upload(request):
             search_index.insert_or_update_object(video)
 
             return render_modal_workflow(
-                request, None, 'wagtailvideos/chooser/video_chosen.js',
-                {'video_json': get_video_json(video)}
+            request, None, None,
+            None, json_data={'step': 'chosen', 'result': get_video_json(video)}
             )
     else:
         form = VideoForm()
@@ -137,6 +137,7 @@ def chooser_upload(request):
     paginator, videos = paginate(request, videos, per_page=12)
 
     return render_modal_workflow(
-        request, 'wagtailvideos/chooser/chooser.html', 'wagtailvideos/chooser/chooser.js',
-        {'videos': videos, 'uploadform': form, 'searchform': searchform}
+        request, 'wagtailvideos/chooser/chooser.html', None,
+        {'videos': videos, 'uploadform': form, 'searchform': searchform},
+        json_data=get_chooser_js_data()
     )

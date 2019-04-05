@@ -26,21 +26,17 @@
    var placeholder = thumb.find(".placeholder");
    var original = thumb.find(".hidden");
    var originalEl = original.get(0);
-   console.log("thumb original" + original);
    original.on("load", function() {
-       console.log("thumb loaded");
        original.show(400);
        placeholder.hide(400);
        });
    var increasing = false;
    original.on("error", function() {
-       console.log("error...");
 
        if (!increasing) {
        increasing = true;
        setTimeout(function() {
            increasing = false;
-           console.log("increasing for el ", originalEl);
            originalEl.src=originalEl.src + "?t=" + Date.now();
            }, 1000);
        }
