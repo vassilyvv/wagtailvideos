@@ -6,15 +6,12 @@ import shutil
 import subprocess
 import tempfile
 import json
+from shutil import which
 
 from django.core.files.base import ContentFile
 
 logger = logging.getLogger(__name__)
 
-try:
-    from shutil import which
-except ImportError:
-    from distutils.spawn import find_executable as which
 
 
 def DEVNULL():
