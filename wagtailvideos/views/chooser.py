@@ -5,10 +5,10 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from wagtail.admin.forms.search import SearchForm
 from wagtail.admin.modal_workflow import render_modal_workflow
-from wagtail.admin.utils import PermissionPolicyChecker, popular_tags_for_model
+from wagtail.admin.models import popular_tags_for_model
+from wagtail.admin.templatetags.wagtailadmin_tags import paginate
 from wagtail.core.models import Collection
 from wagtail.search import index as search_index
-from wagtail.utils.pagination import paginate
 
 from wagtailvideos.forms import get_video_form
 from wagtailvideos.models import Video
