@@ -1,4 +1,6 @@
 import json
+
+from django.core.paginator import Paginator
 from django.utils.translation import ugettext as _
 
 from django.shortcuts import get_object_or_404, render
@@ -7,7 +9,6 @@ from wagtail.admin.auth import PermissionPolicyChecker
 from wagtail.admin.forms.search import SearchForm
 from wagtail.admin.modal_workflow import render_modal_workflow
 from wagtail.admin.models import popular_tags_for_model
-from wagtail.admin.templatetags.wagtailadmin_tags import paginate
 from wagtail.core.models import Collection
 from wagtail.search import index as search_index
 
@@ -74,7 +75,8 @@ def chooser(request):
                 videos = videos.filter(tags__name=tag_name)
 
         # Pagination
-        paginator, videos = paginate(request, videos, per_page=12)
+        paginator = Paginator(videos, per_page=25)
+        videos = paginator.get_page(request.GET.get('p'))
 
         return render(request, "wagtailvideos/chooser/results.html", {
             'videos': videos,
@@ -88,7 +90,8 @@ def chooser(request):
         if len(collections) < 2:
             collections = None
 
-        paginator, videos = paginate(request, videos, per_page=12)
+        paginator = Paginator(videos, per_page=12)
+        videos = paginator.get_page(request.GET.get('p'))
 
     return render_modal_workflow(request, 'wagtailvideos/chooser/chooser.html', None, {
         'videos': videos,
@@ -135,7 +138,8 @@ def chooser_upload(request):
         form = VideoForm()
 
     videos = Video.objects.order_by('title')
-    paginator, videos = paginate(request, videos, per_page=12)
+    paginator = Paginator(videos, per_page=12)
+    videos = paginator.get_page(request.GET.get('p'))
 
     return render_modal_workflow(
         request, 'wagtailvideos/chooser/chooser.html', None,
