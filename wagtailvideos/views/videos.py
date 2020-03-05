@@ -1,3 +1,4 @@
+from django.core.paginator import Paginator
 from django.http import HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -7,7 +8,6 @@ from wagtail.admin import messages
 from wagtail.admin.auth import PermissionPolicyChecker
 from wagtail.admin.forms.search import SearchForm
 from wagtail.admin.models import popular_tags_for_model
-from wagtail.admin.templatetags.wagtailadmin_tags import paginate
 from wagtail.core.models import Collection
 from wagtail.search.backends import get_search_backends
 
@@ -46,8 +46,8 @@ def index(request):
         except (ValueError, Collection.DoesNotExist):
             pass
 
-    paginator, videos = paginate(request, videos)
-
+    paginator = Paginator(videos, per_page=25)
+    videos = paginator.get_page(request.GET.get('p'))
     # Create response
     if request.is_ajax():
         response = render(request, 'wagtailvideos/videos/results.html', {
@@ -181,7 +181,8 @@ def add(request):
 def usage(request, image_id):
     image = get_object_or_404(Video, id=image_id)
 
-    paginator, used_by = paginate(request, image.get_usage())
+    paginator = Paginator(image.get_usage(), per_page=25)
+    used_by = paginator.get_page(request.GET.get('p'))
 
     return render(request, "wagtailvideos/videos/usage.html", {
         'image': image,
